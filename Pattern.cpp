@@ -106,12 +106,19 @@ void FramesManager::write_in_states(vector<vector <Circle>> LEDs) {
 }
 
 void FramesManager::draw(vector<vector <Circle>>& LEDs) {
-	// add option to play frames and set wait_us( ... ); 
-	float delta_time = GetFrameTime();
-	timer += delta_time;
-	if (timer >= interval) {
-		timer = 0.0f;
-		cout << 1 << endl;
+	if (play_b) {
+		float delta_time = GetFrameTime();
+		timer += delta_time;
+
+		if (timer >= interval) {
+			frame_idx++;
+			if (frame_idx >= frame_states.size()) {
+				if (!repeat_b) { play_b = false; }
+				frame_idx = 0;
+			}
+			set_leds_states(LEDs);
+			timer = 0.0f;
+		}
 	}
 
 	if (frame_states.empty()) { current_frame.set_text("Frame: -"); }
@@ -121,13 +128,22 @@ void FramesManager::draw(vector<vector <Circle>>& LEDs) {
 	if (add_frame.draw()) {
 		cout << "add\n";
 		frame_states.push_back(get_states(LEDs));
+		frame_idx++;
+		cout << frame_idx << endl;
 	}
 
 	if (del_frame.draw()) {
+		cout << "del\n";
 		if (!frame_states.empty()) { frame_states.pop_back(); }
-		if (frame_idx >= frame_states.size() && !frame_states.empty()) {
-			frame_idx = frame_states.size() - 1;
-			set_leds_states(LEDs);
+		if (frame_idx >= frame_states.size()) {
+			if (frame_states.empty()) {
+				frame_idx = -1;
+			}
+			else {
+				frame_idx = frame_states.size() - 1;
+				set_leds_states(LEDs);
+			}
+			cout << frame_idx << endl;
 		}
 	}
 
@@ -145,9 +161,26 @@ void FramesManager::draw(vector<vector <Circle>>& LEDs) {
 		}
 	}
 
-	if (frame_idx >= 0 && !frame_states.empty()) {
-		write_in_states(LEDs);
+	if (frame_idx >= 0 && !frame_states.empty() && !play_b) { write_in_states(LEDs); }
+
+	if (repeat_toggle.draw()) { repeat_b = true; }
+	else { repeat_b = false; }
+	if (stop_btn.draw()) { play_b = false; repeat_b = false; repeat_toggle.set_active(false); }
+	if (play_btn.draw()) { 
+		if (!frame_states.empty()) {
+			play_b = true;
+			frame_idx = 0;
+			set_leds_states(LEDs);
+		}
 	}
+
+	interval = wait_input.get_val() / pow(10, 6);
+	string interval_str = " = " + to_string(interval);
+		   interval_str += 's';
+	interval_text.set_text(interval_str);
+
+	wait_input.draw();
+	interval_text.draw();
 
 	total_frames.draw();
 	current_frame.draw();

@@ -8,6 +8,29 @@ Color adjust_brightness(Color c, float factor) {
 			 c.a };
 }
 
+IntBox::IntBox(Rectangle bounds, string text, int min_val, int max_val, int val = 0) {
+	this->bounds  = bounds;
+	this->min_val = min_val;
+	this->max_val = max_val;
+	*value = val;
+
+	this->text = new char[text.size()] {};
+	strcpy(this->text, text.c_str());
+}
+
+void IntBox::draw() {
+	if (*value > max_val) {
+		*value = max_val;
+	}
+	else if (*value < min_val) {
+		*value = min_val;
+	}
+
+	if (GuiValueBox(bounds, text, value, min_val, max_val, edit_mode)) {
+		edit_mode = !edit_mode;
+	}
+}
+
 void Dropdownbox::draw() {
 	if (GuiDropdownBox(bounds, text.c_str(), active, edit_mode)) {
 		edit_mode = !edit_mode;

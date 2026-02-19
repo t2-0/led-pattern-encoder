@@ -8,6 +8,24 @@ using namespace std;
 
 Color adjust_brightness(Color c, float factor);
 
+
+class IntBox {
+public:
+	IntBox(Rectangle bounds, string text, int min_val, int max_val, int val);
+
+	void draw();
+
+	int get_val() { return *value; }
+private:
+	Rectangle bounds;
+
+	char* text = nullptr;
+	int* value = new int(0);
+	int min_val = 0;
+	int max_val = 0;
+	bool edit_mode = false;
+};
+
 class Dropdownbox {
 public:
 	Dropdownbox(Rectangle bounds, string text) { this->bounds = bounds; this->text = text; }
@@ -33,7 +51,10 @@ private:
 class Toggle {
 public:
 	Toggle(Rectangle bounds, string text) { this->bounds = bounds; this->text = text; }
+
 	bool draw();
+
+	void set_active(bool active) { *this->active = active; }
 private:
 	Rectangle bounds;
 	string text;
