@@ -8,19 +8,18 @@ using namespace std;
 
 Color adjust_brightness(Color c, float factor);
 
-
 class IntBox {
 public:
 	IntBox(Rectangle bounds, string text, int min_val, int max_val, int val);
 
 	void draw();
 
-	int get_val() { return *value; }
+	int get_val() { return value; }
 private:
 	Rectangle bounds;
 
 	char* text = nullptr;
-	int* value = new int(0);
+	int value = 0;
 	int min_val = 0;
 	int max_val = 0;
 	bool edit_mode = false;
@@ -29,7 +28,7 @@ private:
 class Dropdownbox {
 public:
 	Dropdownbox(Rectangle bounds, string text) { this->bounds = bounds; this->text = text; }
-	void draw();
+	void draw() {if (GuiDropdownBox(bounds, text.c_str(), &active, edit_mode)) { edit_mode = !edit_mode; } }
 
 	int get_active() { return active; }
 
@@ -47,24 +46,39 @@ private:
 class Button {
 public:
 	Button(Rectangle bounds, string text) { this->bounds = bounds; this->text = text; }
-	int draw() { return GuiButton(bounds, text.c_str()); }
+	void draw() { clicked_b = GuiButton(bounds, text.c_str()); }
+
+	bool clicked() {
+		if (clicked_b) {
+			clicked_b = false;
+			return true;
+		}
+		return false;
+	}
 private:
 	Rectangle bounds;
 	string text;
+
+	bool clicked_b = false;
 };
 
 class Toggle {
 public:
 	Toggle(Rectangle bounds, string text) { this->bounds = bounds; this->text = text; }
 
-	bool draw();
+	void draw() { if (GuiToggle(bounds, text.c_str(), &active)) { active = !active; } }
+	bool is_active()  { return active; }
+	bool is_updated() { return active != active_old; }
 
-	void set_active(bool active) { *this->active = active; }
+	void set_active(bool active) { this->active = active; }
+
+	void update() { active_old = active; }
 private:
 	Rectangle bounds;
 	string text;
 
-	bool* active = new bool(false);
+	bool active = false;
+	bool active_old = false;
 };
 
 class Line {
@@ -72,9 +86,7 @@ public:
 	Line(Vector2 start_pos, Vector2 end_pos, float thick, Color color) {
 		this->start_pos = start_pos;
 		this->end_pos = end_pos;
-
 		this->thick = thick;
-
 		this->color = color;
 	}
 
@@ -124,7 +136,6 @@ public:
 	void set_scroll_val(float scroll_val) { this->scroll_val = scroll_val; }
 
 	float get_scroll_val() { return scroll_val; }
-
 private:
 	Rectangle bounds;
 
@@ -139,7 +150,7 @@ public:
 
 	void draw();
 
-	void set_elements_text(vector<vector<string>> elements_s);
+	void set_elements_text(const vector<vector<string>>& elements_s);
 
 	string format_elements();
 private:

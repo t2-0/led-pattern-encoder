@@ -1,6 +1,8 @@
 #include "gui_elements.h"
 #include <iostream>
 
+Font TextEx::font = GuiGetFont();
+
 Color adjust_brightness(Color c, float factor) {
 	return { static_cast<unsigned char>(fmin(c.r * factor, 255)),
 			 static_cast<unsigned char>(fmin(c.g * factor, 255)),
@@ -12,37 +14,23 @@ IntBox::IntBox(Rectangle bounds, string text, int min_val, int max_val, int val 
 	this->bounds  = bounds;
 	this->min_val = min_val;
 	this->max_val = max_val;
-	*value = val;
+	value = val;
 
 	this->text = new char[text.size()] {};
 	strcpy(this->text, text.c_str());
 }
 
 void IntBox::draw() {
-	if (*value > max_val) {
-		*value = max_val;
+	if (value > max_val) {
+		value = max_val;
 	}
-	else if (*value < min_val) {
-		*value = min_val;
+	else if (value < min_val) {
+		value = min_val;
 	}
 
-	if (GuiValueBox(bounds, text, value, min_val, max_val, edit_mode)) {
+	if (GuiValueBox(bounds, text, &value, min_val, max_val, edit_mode)) {
 		edit_mode = !edit_mode;
 	}
-}
-
-void Dropdownbox::draw() {
-	if (GuiDropdownBox(bounds, text.c_str(), &active, edit_mode)) {
-		edit_mode = !edit_mode;
-	}
-}
-
-bool Toggle::draw() {
-	if (GuiToggle(bounds, text.c_str(), active)) {
-		*active = !*active;
-	}
-
-	return *active;
 }
 
 TextEx::TextEx(Vector2 pos, string text, Color color) {
@@ -75,7 +63,6 @@ ScrollBar::ScrollBar(Rectangle bounds, float min_scroll, float font_size, size_t
 void ScrollBar::draw() {
 	scroll_val = GuiScrollBarW(bounds, scroll_val, min_scroll, max_scroll);
 }
-
 
 CopyPanel::CopyPanel(Rectangle bounds, float color_factor) {
 	this->bounds = bounds;
@@ -112,11 +99,12 @@ void CopyPanel::draw() {
 	for (size_t i = 0; i < idx_v.size(); i++) { idx_v[i].draw(); }
 	EndScissorMode();
 
-	if (copy_btn->draw()) { SetClipboardText(format_elements().c_str()); }
+	copy_btn->draw();
+	if(copy_btn->clicked()) { SetClipboardText(format_elements().c_str()); }
 	if (elements.size() > 1) { scrollbar->draw(); }
 }
 
-void CopyPanel::set_elements_text(vector<vector<string>> elements_s) {
+void CopyPanel::set_elements_text(const vector<vector<string>> &elements_s) {
 	elements.clear();
 	idx_v.clear();
 	Rectangle idx_bounds = bounds;

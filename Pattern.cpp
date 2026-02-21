@@ -1,174 +1,43 @@
 #include "Pattern.h"
 #include <sstream>
 
-float Led::radius = 15.0f;
-Color Led::line_color = RAYWHITE;
-
-Font TextEx::font = GuiGetFont();
-
-void Led::init_colors() {
-	Led::line_color = GetColor(GuiGetStyle(BUTTON, BORDER_COLOR_NORMAL));
-}
-
-float Led::get_radius() {
-	return radius;
-}
-
-Led::Led(Vector2 center, Color color) {
-	this->center = center;
-	this->color = color;
-}
-
-void Led::draw() {
-	if (!forced_state) {
-		Vector2 mouse_pos = GetMousePosition();
-
-		if (CheckCollisionPointCircle(mouse_pos, center, radius)) {
-			if (state != LedState::PRESSED) {
-				state = LedState::FOCUSED;
-			}
-
-			if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-				state = LedState::PRESSED;
-			}
-			else if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-				state = LedState::NORMAL;
-			}
-		}
-		else {
-			if (state == LedState::FOCUSED) {
-				state = LedState::NORMAL;
-			}
-		}
-	}
-
-	switch (state) {
-	case LedState::NORMAL:
-		color = GetColor(GuiGetStyle(BUTTON, BASE_COLOR_NORMAL));
-		break;
-	case LedState::FOCUSED:
-		color = GetColor(GuiGetStyle(BUTTON, BASE_COLOR_FOCUSED));
-		break;
-	case LedState::PRESSED:
-		color = GetColor(GuiGetStyle(BUTTON, BASE_COLOR_PRESSED));
-		break;
-	}
-	DrawCircleV(center, radius, color);
-	DrawCircleLinesV(center, radius, line_color);
-}
-
-vector <vector<LedState>> FramesManager::get_states_from_leds(vector<vector <Led>> leds) {
-	vector<vector<LedState>> states;
-	for (size_t r = 0; r < leds.size(); r++) {
-		states.push_back({});
-		for (size_t c = 0; c < leds[r].size(); c++) {
-			states[r].push_back(leds[r][c].get_state());
+array<array<LedState, 8>, 8> get_states_from_leds(const vector<vector <Led>>& leds) {
+	array<array<LedState, 8>, 8> states;
+	for (size_t r = 0; r < states.size(); r++) {
+		for (size_t c = 0; c < states[r].size(); c++) {
+			states[r][c] = leds[r][c].get_state();
 		}
 	}
 
 	return states;
 }
 
-void FramesManager::set_leds_states(vector<vector <Led>>& leds) {
-	for (size_t r = 0; r < leds.size(); r++) {
-		for (size_t c = 0; c < leds.size(); c++) {
-			LedState state_t = frame_states[frame_idx][r][c];
-			leds[r][c].set_state(state_t);
-		}
-	}
+void PatternGui::draw() {
+	reset_btn.draw();
+	invert_btn.draw();
+
+	mirror_h_toggle.draw();
+	mirror_v_toggle.draw();
+
+	mode_drop.draw();
 }
 
-void FramesManager::write_in_states(const vector<vector <Led>>& leds) {
-	for (size_t r = 0; r < leds.size(); r++) {
-		for (size_t c = 0; c < leds[r].size(); c++) {
-			frame_states[frame_idx][r][c] = leds[r][c].get_state();
-		}
-	}
-}
+void PatternGui::update(Pattern& pattern) {
+	if (reset_btn.clicked())  { pattern.reset(); }
+	if (invert_btn.clicked()) { pattern.invert(); }
 
-void FramesManager::draw(vector<vector <Led>>& leds) {
-	if (play_b) {
-		float delta_time = GetFrameTime();
-		timer += delta_time;
+	bool draw_h = mirror_h_toggle.is_active();
+	bool draw_v = mirror_v_toggle.is_active();
 
-		if (timer >= interval) {
-			frame_idx++;
-			if (frame_idx >= frame_states.size()) {
-				if (!repeat_b) { play_b = false; }
-				frame_idx = 0;
-			}
-			set_leds_states(leds);
-			timer = 0.0f;
-		}
-	}
+	PatternState pattern_state = PatternState::NORMAL;
+	if (draw_h) { pattern_state = PatternState::MIRROR_H; }
+	if (draw_v) { pattern_state = PatternState::MIRROR_V; }
+	if (draw_h && draw_v) { pattern_state = PatternState::MIRROR_HV; }
+	pattern.set_state(pattern_state);
 
-	if (frame_states.empty()) { current_frame.set_text("Frame: -"); }
-	else { current_frame.set_text("Frame: " + to_string(frame_idx)); }
-	total_frames.set_text("Total Frames: " + to_string(frame_states.size()));
-
-	if (add_frame.draw()) {
-		if (frame_states.size() < 64) {
-			cout << "add\n";
-			frame_states.push_back(get_states_from_leds(leds));
-			frame_idx++;
-			cout << frame_idx << endl;
-		}
-		updated_b = true;
-	}
-
-	if (del_frame.draw()) {
-		cout << "del\n";
-		if (!frame_states.empty()) { frame_states.pop_back(); }
-		if (frame_idx >= frame_states.size()) {
-			if (frame_states.empty()) {
-				frame_idx = -1;
-			}
-			else {
-				frame_idx = frame_states.size() - 1;
-				set_leds_states(leds);
-			}
-			cout << frame_idx << endl;
-		}
-		updated_b = true;
-	}
-
-	if (frame_back.draw()) {
-		if (frame_idx > 0) {
-			frame_idx--;
-			set_leds_states(leds);
-		}
-	}
-
-	if (frame_forward.draw()) {
-		if (frame_idx < frame_states.size() - 1 && !frame_states.empty()) {
-			frame_idx++;
-			set_leds_states(leds);
-		}
-	}
-
-	if (frame_idx >= 0 && !frame_states.empty() && !play_b) { write_in_states(leds); }
-
-	if (repeat_toggle.draw()) { repeat_b = true; }
-	else { repeat_b = false; }
-	if (stop_btn.draw()) { play_b = false; repeat_b = false; repeat_toggle.set_active(false); }
-	if (play_btn.draw()) { 
-		if (!frame_states.empty()) {
-			play_b = true;
-			frame_idx = 0;
-			set_leds_states(leds);
-		}
-	}
-
-	interval = wait_input.get_val() / pow(10, 6);
-	string interval_str = " = " + to_string(interval);
-		   interval_str += 's';
-	interval_text.set_text(interval_str);
-
-	wait_input.draw();
-	interval_text.draw();
-
-	total_frames.draw();
-	current_frame.draw();
+	PatternType pattern_type = PatternType::DEFAULT;
+	if (mode_drop.get_active() == 1) { pattern_type = PatternType::ANIMATION; }
+	pattern.set_type(pattern_type);
 }
 
 Pattern::Pattern() {
@@ -221,31 +90,33 @@ void Pattern::draw() {
 	for (int i = 0; i < 8; i++) {
 		bits_v[i].draw();
 		idx_h[i].draw();
-	}	
-	
-	if (reset_btn.draw()) { reset(); }
-	if (invert_btn.draw()) { invert(); }
-
-	bool draw_h = mirror_h_toggle.draw();
-	bool draw_v = mirror_v_toggle.draw();
-
-	if (draw_h) { state = PatternState::MIRROR_H; }
-	if (draw_v) { state = PatternState::MIRROR_V; }
-	
-	if (!draw_h && !draw_v) { state = PatternState::NORMAL; }
-	if (draw_h && draw_v)   { state = PatternState::MIRROR_HV; }
-
-	mode_drop.draw();
-	if (mode_drop.get_active() == 0) { type = PatternType::DEFAULT; }
-	else { type = PatternType::ANIMATION; }
-
-	if (type == PatternType::ANIMATION) {
-		frames_manager.draw(leds);
 	}
 
+	frames_gui.draw();
+
 	draw_leds();
-	is_updated(); 
-	// if update_panel
+	draw_lines();
+}
+
+void Pattern::update() {
+	if (type == PatternType::ANIMATION) {
+		frames_gui.update(frames_manager);
+
+		array<array<LedState, 8>, 8> leds_states = get_states_from_leds(leds);
+		array<array<LedState, 8>, 8> frame_states = frames_manager.get_active_state();
+
+		// prevent leds overriding manager active states
+		if (old_type != type) { set_leds_states(frame_states); }
+
+		// if leds state updated -> update active states for manager
+		// otherwise if active manager state updated -> update leds states
+		if (is_updated()) { frames_manager.set_active_states(leds_states); }
+		else if (frame_states != leds_states) { set_leds_states(frame_states); }
+
+		frames_manager.update();
+	}
+	old_type = type;
+
 	convert_hex();
 }
 
@@ -275,21 +146,26 @@ void Pattern::draw_leds() {
 		for (size_t c = 0; c < leds[r].size(); c++) {
 			leds[r][c].draw();
 			switch (state) {
-			case PatternState::MIRROR_H:
-				mirror_h(r, c);
-				line_h->draw();
-				break;
-			case PatternState::MIRROR_V:
-				mirror_v(r, c);
-				line_v->draw();
-				break;
-			case PatternState::MIRROR_HV:
-				mirror_hv(r, c);
-				line_h->draw();
-				line_v->draw();
-				break;
+			case PatternState::MIRROR_H: mirror_h(r, c); break;
+			case PatternState::MIRROR_V: mirror_v(r, c); break;
+			case PatternState::MIRROR_HV: mirror_hv(r, c);break;
 			}
 		}
+	}
+}
+
+void Pattern::draw_lines() {
+	switch (state) {
+	case PatternState::MIRROR_H:
+		line_h->draw();
+		break;
+	case PatternState::MIRROR_V:
+		line_v->draw();
+		break;
+	case PatternState::MIRROR_HV:
+		line_h->draw();
+		line_v->draw();
+		break;
 	}
 }
 
@@ -342,7 +218,7 @@ void Pattern::convert_hex() {
 		hex_v[0].push_back("};");
 	}
 	else {
-		vector<vector<vector <LedState>>> states = frames_manager.get_frame_states();
+		vector<array<array <LedState, 8>, 8>> states = frames_manager.get_frame_states();
 
 		hex_v.clear();
 		hex_v.push_back({});
@@ -371,22 +247,13 @@ void Pattern::convert_hex() {
 				ss << hex << uppercase << val << ", ";
 			}
 			hex_v[i + 1].push_back(ss.str());
-			hex_v[i + 1].back().pop_back();
-			hex_v[i + 1].back().pop_back();
+			hex_v[i + 1].back().pop_back(); // pop ' '
+			hex_v[i + 1].back().pop_back(); // pop ','
 			hex_v[i + 1].back() += " },";
 		}
-
+		if (hex_v.size() > 1) { hex_v.back().back().pop_back(); } // pop ','
 		hex_v.push_back({});
 		hex_v.back().push_back("};");
-		/*
-		for (int i = 0; i < hex_v.size(); i++) {
-			cout << "i: " << i << endl;
-			for (int v = 0; v < hex_v[i].size(); v++) {
-				cout << hex_v[i][v];
-			}
-			cout << endl;
-		}
-		*/
 	}
 }
 
@@ -469,13 +336,23 @@ void Pattern::mirror_hv(size_t row, size_t col) {
 	}
 }
 
-void Pattern::is_updated() {
+bool Pattern::is_updated() {
+	bool b = false;
 	for (size_t r = 0; r < leds.size(); r++) {
 		for (size_t c = 0; c < leds[r].size(); c++) {
 			if (leds[r][c].is_updated(LedState::FOCUSED)) {
-				update_panel_b = true;
+				b = true;
 				leds[r][c].update();
 			}
+		}
+	}
+	return b;
+}
+
+void Pattern::set_leds_states(array<array<LedState, 8>, 8> states) {
+	for (size_t r = 0; r < states.size(); r++) {
+		for (size_t c = 0; c < states[r].size(); c++) {
+			leds[r][c].set_state(states[r][c]);
 		}
 	}
 }
