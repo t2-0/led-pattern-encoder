@@ -7,22 +7,25 @@
 
 using namespace std;
 
-enum class CircleState  { NORMAL, FOCUSED, PRESSED };
+enum class LedState { NORMAL, FOCUSED, PRESSED };
 enum class PatternState { NORMAL, MIRROR_H, MIRROR_V, MIRROR_HV };
 enum class PatternType	{ DEFAULT, ANIMATION };
 
-class Circle {
+class Led {
 public:
-	Circle(Vector2 center, Color color);
+	Led(Vector2 center, Color color);
 
 	void draw();
 
 	Vector2 get_pos() { return center; }
-	CircleState get_state() { return state; }
+	LedState get_state() const{ return state; }
 
 	void set_forced_state(bool forced_state) { this->forced_state = forced_state; }
 	void set_color(Color color) { this->color = color; }
-	void set_state(CircleState state) { this->state = state; }
+	void set_state(LedState state) { this->state = state; }
+
+	bool is_updated(LedState to_ignore) { if (state == to_ignore) return false; return state != old_state; }
+	void update() { old_state = state; }
 
 	static void init_colors();
 	static float get_radius();
@@ -31,49 +34,35 @@ private:
 	Color color;
 
 	bool forced_state = false;
-	CircleState state = CircleState::NORMAL;
+	LedState state = LedState::NORMAL;
+	LedState old_state = LedState::NORMAL;
 
 	static float radius;
 	static Color line_color;
 };
 
 
-class TextEx {
-public:
-	TextEx(Vector2 pos, string text, Color color);
-
-	void draw();
-	void set_text(string text) { this->text = text; }
-
-	string get_text() { return text; }
-
-	friend ostream& operator<<(ostream& os, const TextEx& t);
-
-	static void init_font();
-private:
-	string text;
-	Vector2 pos;
-
-	static Font font;
-	Color color;
-};
-
 class FramesManager {
 public:
-	void draw(vector<vector <Circle>>& LEDs);
+	void draw(vector<vector <Led>>& leds);
+
+	vector<vector<vector <LedState>>> get_frame_states() { return frame_states; }
+	bool is_updated() { return updated_b; }
+	void update() { updated_b = false; }
 private:
-	vector<vector<vector <CircleState>>> frame_states;
+	vector<vector<vector <LedState>>> frame_states;
 	int frame_idx = -1;
 
 	float timer = 0.0f;
 	float interval = 1.0f;
 	bool play_b = false;
 	bool repeat_b = false;
+	bool updated_b = false;
 
 	Button del_frame = { { 250.0f, 390.0f, 20.0f, 20.0f }, "-" };
 	Button add_frame = { { 280.0f, 390.0f, 20.0f, 20.0f }, "+" };
 	Button frame_back = { { 250.0f, 415.0f, 20.0f, 20.0f }, GuiIconText(ICON_ARROW_LEFT_FILL, nullptr) };
-	Button frame_forward = { { 335.0f, 415.0f, 20.0f, 20.0f }, GuiIconText(ICON_ARROW_RIGHT_FILL, nullptr) };
+	Button frame_forward = { { 338.0f, 415.0f, 20.0f, 20.0f }, GuiIconText(ICON_ARROW_RIGHT_FILL, nullptr) };
 
 	Toggle repeat_toggle = { { 250.0f, 465.0f, 20.0f, 20.0f }, GuiIconText(ICON_REPEAT, nullptr) };
 	Button stop_btn = { { 280.0f, 465.0f, 20.0f, 20.0f }, GuiIconText(ICON_PLAYER_STOP, nullptr) };
@@ -85,10 +74,10 @@ private:
 	TextEx current_frame = { { 275.0f, 415.0f }, "Frame: ", GetColor(GuiGetStyle(BUTTON,TEXT_COLOR_NORMAL)) };
 	TextEx interval_text = { { 320.0f, 440.0f }, "", GetColor(GuiGetStyle(BUTTON,TEXT_COLOR_NORMAL)) };
 
-	vector <vector<CircleState>> get_states(vector<vector <Circle>> LEDs);
+	vector <vector<LedState>> get_states_from_leds(vector<vector <Led>> leds);
 
-	void set_leds_states(vector<vector <Circle>>& LEDs);
-	void write_in_states(vector<vector <Circle>> LEDs);
+	void set_leds_states(vector<vector <Led>>& leds);
+	void write_in_states(const vector<vector <Led>>& leds);
 };
 
 class Pattern {
@@ -97,18 +86,21 @@ public:
 
 	void draw();
 
-	vector<string> get_hex() { return hex_v; }
+	void set_update_panel_b(bool b) { update_panel_b = b; }
+
+	vector<vector<string>> get_hex() { return hex_v; }
+	bool update_panel() { return update_panel_b; }
 private:
 	vector<TextEx> bits_v;
 	vector<TextEx> idx_h;
-	vector<vector <Circle>> LEDs;
-	vector<string> hex_v;
+	vector<vector <Led>> leds;
+	vector<vector<string>> hex_v;
 
-	vector<vector<vector <CircleState>>> frame_states;
 	int frame_idx = 0;
+	bool update_panel_b = true;
 
 	Button reset_btn  = { { 50.0f, 370.0f, 60.0f, 30.0f }, "Reset" };
-	Button invert_btn = { { 50.0f, 405.0f, 60.0f, 30.0f }, "Invert" }; //{ 295.0f, 370.0f, 60.0f, 30.0f }
+	Button invert_btn = { { 50.0f, 405.0f, 60.0f, 30.0f }, "Invert" };
 
 	Toggle mirror_h_toggle = { { 120.0f, 405.0f, 30.0f, 30.0f }, GuiIconText(ICON_SYMMETRY_HORIZONTAL, nullptr) };
 	Toggle mirror_v_toggle = { { 120.0f, 370.0f, 30.0f, 30.0f }, GuiIconText(ICON_SYMMETRY_VERTICAL, nullptr) };
@@ -136,4 +128,6 @@ private:
 	void mirror_h(size_t row, size_t col);
 	void mirror_v(size_t row, size_t col);
 	void mirror_hv(size_t row, size_t col);
+
+	void is_updated();
 };

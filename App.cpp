@@ -9,11 +9,11 @@ App::App() {
 	string file = "style/genesis/style_genesis.rgs";
 	GuiLoadStyle(file.c_str());
 
-	Circle::init_colors();
+	Led::init_colors();
 	TextEx::init_font();
 
 	pattern = new Pattern();
-	panel   = new CopyPanel{ { 420.0f, 40.0f, 150.0f, 192.0f }, 0.75f };
+	panel   = new CopyPanel{ { 385.0f, 40.0f, 150.0f, 192.0f }, 0.75f };
 }
 
 void App::run() {
@@ -24,7 +24,11 @@ void App::run() {
 		ClearBackground(bg_color);
 		
 		pattern->draw();
-
+		/*
+		if (pattern->update_panel()) {
+			pattern->set_update_panel_b(false);
+		}
+		*/
 		panel->set_elements_text(pattern->get_hex());
 		panel->draw();
 		EndDrawing();

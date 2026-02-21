@@ -31,11 +31,16 @@ public:
 	Dropdownbox(Rectangle bounds, string text) { this->bounds = bounds; this->text = text; }
 	void draw();
 
-	int get_active() { return *active; }
+	int get_active() { return active; }
+
+	bool is_updated() { return active != old_active; }
+	void update() { old_active = active; }
+
 private:
 	Rectangle bounds;
 	string text;
-	int* active = new int(0);
+	int active = 0;
+	int old_active = 0;
 	bool edit_mode = false;
 };
 
@@ -83,32 +88,49 @@ private:
 	float thick;
 };
 
-class RectangleEx {
+class TextEx {
 public:
-	RectangleEx();
-	RectangleEx(Rectangle bounds, string text, Color color, float color_factor);
+	TextEx() {}
+	TextEx(Vector2 pos, string text, Color color);
 
 	void draw();
 
+	void set_text(string text)  { this->text = text; }
+	void set_pos(Vector2 pos)   { this->pos = pos; }
 	void set_color(Color color) { this->color = color; }
-	void set_text(string text) { this->text = text; }
-	void set_bounds(Rectangle bounds) { this->bounds = bounds; }
-	void set_color_factor(float color_factor) { this->color_factor = color_factor; }
-
-	bool is_pressed() { return pressed; }
 
 	string get_text() { return text; }
-	Rectangle get_bounds() { return bounds; }
+	Vector2 get_pos() { return pos; }
+
+	friend ostream& operator<<(ostream& os, const TextEx& t);
+
+	static void init_font();
+private:
+	string text;
+	Vector2 pos;
+
+	static Font font;
+	Color color;
+};
+
+class ScrollBar {
+public:
+	ScrollBar(Rectangle bounds, float min_scroll, float font_size, size_t item_count);
+
+	void draw();
+
+	void set_bounds(Rectangle bounds) { this->bounds = bounds; }
+	void set_max_scroll(float max_scroll) { this->max_scroll = max_scroll; }
+	void set_scroll_val(float scroll_val) { this->scroll_val = scroll_val; }
+
+	float get_scroll_val() { return scroll_val; }
+
 private:
 	Rectangle bounds;
-	string text;
 
-	bool pressed = false;
-
-	Color color;
-	Color text_color;
-
-	float color_factor;
+	float min_scroll;
+	float max_scroll;
+	float scroll_val;
 };
 
 class CopyPanel {
@@ -117,17 +139,19 @@ public:
 
 	void draw();
 
-	void set_elements_text(vector<string> elements_s);
+	void set_elements_text(vector<vector<string>> elements_s);
 
 	string format_elements();
 private:
 	Rectangle bounds;
+	ScrollBar* scrollbar = nullptr;
 
 	Color color;
 	Color line_color;
-	// use 2D vector?
-	array<RectangleEx, 10> elements;
-	array<Vector2, 8> idx_pos = {};
+	vector<array<TextEx, 10>> elements;
+	vector<TextEx> idx_v;
 
 	Button* copy_btn = nullptr;
+
+	float color_factor = 1.0f;
 };

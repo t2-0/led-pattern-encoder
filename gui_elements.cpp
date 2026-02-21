@@ -32,7 +32,7 @@ void IntBox::draw() {
 }
 
 void Dropdownbox::draw() {
-	if (GuiDropdownBox(bounds, text.c_str(), active, edit_mode)) {
+	if (GuiDropdownBox(bounds, text.c_str(), &active, edit_mode)) {
 		edit_mode = !edit_mode;
 	}
 }
@@ -45,57 +45,41 @@ bool Toggle::draw() {
 	return *active;
 }
 
-RectangleEx::RectangleEx() {
-	bounds = { 0.0f, 0.0f, 0.0f, 0.0f };
-	color_factor = 1.0f;
-
-	Color style_color = GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR));
-	color = adjust_brightness(style_color, color_factor);
-
-	text_color = GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL));
-}
-
-RectangleEx::RectangleEx(Rectangle bounds, string text, Color color, float color_factor = 1.0f) {
-	this->bounds = bounds;
+TextEx::TextEx(Vector2 pos, string text, Color color) {
 	this->text = text;
+	this->pos = pos;
 	this->color = color;
-
-	this->color_factor = color_factor;
-
-	text_color = GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL));
 }
 
-void RectangleEx::draw() {
-	Vector2 mouse_pos = GetMousePosition();
-
-	Color style_color = GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR));
-	if (CheckCollisionPointRec(mouse_pos, bounds)) {
-		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-			color = BLUE;
-			pressed = true;
-		}
-		else if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-			color = adjust_brightness(style_color, color_factor);
-			pressed = false;
-		}
-		else if (!pressed) {
-			color = GetColor(GuiGetStyle(BUTTON, BASE_COLOR_PRESSED));
-		}
-	}
-	else {
-		if (!pressed) {
-			color = adjust_brightness(style_color, color_factor);
-		}
-	}
-
-	DrawRectangleRec(bounds, color);
-	Font font = GuiGetFont();
-	DrawTextEx(font, text.c_str(), { bounds.x, bounds.y }, font.baseSize, 0.0f, text_color);
+void TextEx::init_font() {
+	TextEx::font = GuiGetFont();
 }
+
+void TextEx::draw() {
+	DrawTextEx(font, text.c_str(), pos, font.baseSize, 0.0f, color);
+}
+
+ostream& operator<<(ostream& os, const TextEx& t) {
+	os << t.text;
+	return os;
+}
+
+ScrollBar::ScrollBar(Rectangle bounds, float min_scroll, float font_size, size_t item_count) {
+	this->bounds = bounds;
+	this->min_scroll = min_scroll;
+	this->max_scroll = 10 + item_count * (font_size + 10);
+
+	scroll_val = 0;
+}
+
+void ScrollBar::draw() {
+	scroll_val = GuiScrollBarW(bounds, scroll_val, min_scroll, max_scroll);
+}
+
 
 CopyPanel::CopyPanel(Rectangle bounds, float color_factor) {
 	this->bounds = bounds;
-
+	this->color_factor = color_factor;
 	Color style_color = GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR));
 	line_color = GetColor(GuiGetStyle(BUTTON, BORDER_COLOR_NORMAL));
 
@@ -107,62 +91,108 @@ CopyPanel::CopyPanel(Rectangle bounds, float color_factor) {
 			  button_bounds.height = 30.0f;
 	copy_btn = new Button{ button_bounds, "Copy" };
 
-	Rectangle element_bounds = bounds;
-			  element_bounds.x++;
-			  element_bounds.y++;
-			  element_bounds.width -= 2.0f;
-			  element_bounds.height = 19.0f;
-	
-	for (size_t i = 0; i < elements.size(); i++) {
-		elements[i].set_bounds(element_bounds);
-		elements[i].set_color_factor(color_factor);
+	Rectangle scrollbar_bounds = bounds;
+			  scrollbar_bounds.x += bounds.width + 5;
+			  scrollbar_bounds.width = 10;
 
-		element_bounds.y += 19.0f;
-	}
-
-	for (size_t i = 0, r = 1; i < idx_pos.size(); i++, r++) {
-		Rectangle bounds = elements[r].get_bounds();
-				  bounds.x -= 12.0f;
-		Vector2 pos = { bounds.x, bounds.y };
-		idx_pos[i] = pos;
-	}
+	float font_size = GuiGetFont().baseSize;
+	scrollbar = new ScrollBar{ scrollbar_bounds, 0, font_size, elements.size() };
 }
 
 void CopyPanel::draw() {
 	DrawRectangleRec(bounds, color);
 	DrawRectangleLinesEx(bounds, 1.0f, line_color);
-	
-	for (size_t i = 0; i < elements.size(); i++) { elements[i].draw(); }
-	if (copy_btn->draw()) { SetClipboardText(format_elements().c_str()); }
 
-	Font font = GuiGetFont();
-	for (size_t i = 0; i < idx_pos.size(); i++) {
-		string str = to_string(i);
-		DrawTextEx(font, str.c_str(), idx_pos[i], font.baseSize, 0.0f, BLUE);
+	BeginScissorMode(bounds.x - 20, bounds.y, bounds.width + 20, bounds.height);
+	for (size_t r = 0; r < elements.size(); r++) {
+		for (size_t c = 0; c < elements[r].size(); c++) {
+			elements[r][c].draw();
+		}
 	}
+	for (size_t i = 0; i < idx_v.size(); i++) { idx_v[i].draw(); }
+	EndScissorMode();
+
+	if (copy_btn->draw()) { SetClipboardText(format_elements().c_str()); }
+	if (elements.size() > 1) { scrollbar->draw(); }
 }
 
-void CopyPanel::set_elements_text(vector<string> elements_s) {
-	for (size_t i = 0; i < elements.size() && i < elements_s.size(); i++) {
-		elements[i].set_text(elements_s[i]);
+void CopyPanel::set_elements_text(vector<vector<string>> elements_s) {
+	elements.clear();
+	idx_v.clear();
+	Rectangle idx_bounds = bounds;
+			  idx_bounds.x -= 12.0f;
+			  idx_bounds.y += 19.0f;
+			  idx_bounds.width -= 2.0f;
+			  idx_bounds.height = 19.0f;
+	int y_offset = 1;
+	Font font = GuiGetFont();
+	if (elements_s.size() == 1) {
+		bounds = { 385.0f, 40.0f, 150.0f, 192.0f };
+
+		for (size_t i = 0; i < 8; i++) {
+			Vector2 pos = { idx_bounds.x, idx_bounds.y };
+			idx_v.push_back({ { pos }, to_string(i), BLUE });
+			idx_bounds.y += 19.0f;
+		}
 	}
+	else {
+		bounds = { 385.0f, 40.0f, 350.0f, 192.0f };
+		Rectangle scrollbar_bounds = bounds;
+				  scrollbar_bounds.x += bounds.width + 5;
+				  scrollbar_bounds.width = 10;
+				  scrollbar->set_bounds(scrollbar_bounds);
+		for (size_t i = 0; i + 2 < elements_s.size(); i++) {
+			Vector2 pos = { idx_bounds.x, idx_bounds.y };
+					pos.y = bounds.y + y_offset + (i + 1) * font.baseSize - scrollbar->get_scroll_val();
+			if (i >= 10) { pos.x -= font.baseSize / 2; }
+			idx_v.push_back({ pos, to_string(i), BLUE });
+			idx_bounds.y += 19.0f;
+		}
+	}
+
+	Color element_color = GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL));
+	Rectangle element_bounds = bounds;
+			  element_bounds.x++;
+			  element_bounds.y -= 18;
+	for (size_t r = 0; r < elements_s.size(); r++) {
+		elements.push_back({});
+		for (size_t c = 0; c < elements[r].size() && c < elements_s[r].size(); c++) {
+			if (elements_s.size() > 1) {
+				element_bounds.y = bounds.y + y_offset + r * font.baseSize - scrollbar->get_scroll_val();
+			}
+			else {
+				element_bounds.y += 19.0f;
+			}
+			elements[r][c].set_pos({ element_bounds.x, element_bounds.y });
+			elements[r][c].set_text(elements_s[r][c]);
+			elements[r][c].set_color(element_color);
+		}
+	}
+	float scrollbar_max = y_offset + elements.size() * font.baseSize - bounds.height;
+	scrollbar->set_max_scroll(scrollbar_max);
+	//scrollbar->set_scroll_val(scrollbar_max);
 }
 
 string CopyPanel::format_elements() {
 	string str;
 
-	for (size_t i = 0; i < elements.size(); i++) {
-		if (elements[i].is_pressed()) {
-			str += elements[i].get_text() + "\n";
+	if (elements.size() == 1) {
+		for (size_t r = 0; r < elements.size(); r++) {
+			for (size_t c = 0; c < elements[r].size(); c++) {
+				str += elements[r][c].get_text() + "\n";
+			}
 		}
 	}
+	else {
+		for (size_t r = 0; r < elements.size(); r++) {
+			for (size_t c = 0; c < elements[r].size(); c++) {
+				str += elements[r][c].get_text();
+			}
+			str += "\n";
+		}
+	}
+	cout << str << endl;
 
-	if (str.empty()) {
-		for (size_t i = 0; i < elements.size(); i++) {
-			str += elements[i].get_text() + "\n";
-		}
-	}
-	
 	str.pop_back();
 	return str;
 }
