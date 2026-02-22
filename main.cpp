@@ -26,8 +26,9 @@ int main() {
 		pattern.update();
 		pattern_gui.update(pattern);
 
-		panel.set_elements_text(pattern.get_hex());
+		if (pattern.update_panel()) { panel.set_elements_text(pattern.get_hex()); }
 		panel.draw();
+
 		EndDrawing();
 	}
 }

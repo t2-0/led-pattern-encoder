@@ -92,13 +92,18 @@ void Pattern::draw() {
 		idx_h[i].draw();
 	}
 
-	frames_gui.draw();
+	if(type == PatternType::ANIMATION){ frames_gui.draw(); }
 
 	draw_leds();
 	draw_lines();
 }
 
 void Pattern::update() {
+	bool type_b = old_type != type;
+
+	update_panel_b = is_updated();
+	update_panel_b = update_panel_b || type_b;
+
 	if (type == PatternType::ANIMATION) {
 		frames_gui.update(frames_manager);
 
@@ -106,18 +111,20 @@ void Pattern::update() {
 		array<array<LedState, 8>, 8> frame_states = frames_manager.get_active_state();
 
 		// prevent leds overriding manager active states
-		if (old_type != type) { set_leds_states(frame_states); }
+		if (type_b) { set_leds_states(frame_states); }
 
 		// if leds state updated -> update active states for manager
 		// otherwise if active manager state updated -> update leds states
-		if (is_updated()) { frames_manager.set_active_states(leds_states); }
+		if (update_panel_b) { frames_manager.set_active_states(leds_states); }
 		else if (frame_states != leds_states) { set_leds_states(frame_states); }
 
+		update_panel_b = update_panel_b || frames_manager.is_updated();
 		frames_manager.update();
+		frames_manager.update_b();
 	}
 	old_type = type;
 
-	convert_hex();
+	if (update_panel_b) { convert_hex(); }
 }
 
 void Pattern::reset() {

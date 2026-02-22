@@ -107,6 +107,7 @@ void FramesManager::add_frame() {
 		frame_states.push_back(active_state);
 		frame_idx = frame_states.size() - 1;
 		cout << frame_idx << endl;
+		updated_b = true;
 	}
 }
 
@@ -122,6 +123,7 @@ void FramesManager::del_frame() {
 			set_active_states();
 		}
 		cout << frame_idx << endl;
+		updated_b = true;
 	}
 }
 

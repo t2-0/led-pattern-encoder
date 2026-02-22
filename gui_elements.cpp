@@ -91,12 +91,34 @@ void CopyPanel::draw() {
 	DrawRectangleLinesEx(bounds, 1.0f, line_color);
 
 	BeginScissorMode(bounds.x - 20, bounds.y, bounds.width + 20, bounds.height);
+	Font font = GuiGetFont();
+	int y_offset = 1;
+
+	Rectangle element_bounds = bounds;
+			  element_bounds.x++;
+			  element_bounds.y -= 18;
+
 	for (size_t r = 0; r < elements.size(); r++) {
 		for (size_t c = 0; c < elements[r].size(); c++) {
+			if (elements.size() > 1) {
+				element_bounds.y = bounds.y + y_offset + r * font.baseSize - scrollbar->get_scroll_val();
+			}
+			else {
+				element_bounds.y += 19.0f;
+			}
+
+			elements[r][c].set_pos({ element_bounds.x, element_bounds.y });
 			elements[r][c].draw();
 		}
 	}
-	for (size_t i = 0; i < idx_v.size(); i++) { idx_v[i].draw(); }
+	for (size_t i = 0; i < idx_v.size(); i++) {
+		if (elements.size() > 1) {
+			Vector2 pos = idx_v[i].get_pos();
+			pos.y = bounds.y + y_offset + (i + 1) * font.baseSize - scrollbar->get_scroll_val();
+			idx_v[i].set_pos(pos);
+		}
+		idx_v[i].draw();
+	}
 	EndScissorMode();
 
 	copy_btn->draw();
@@ -105,6 +127,7 @@ void CopyPanel::draw() {
 }
 
 void CopyPanel::set_elements_text(const vector<vector<string>> &elements_s) {
+	cout << "set" << endl;
 	elements.clear();
 	idx_v.clear();
 	Rectangle idx_bounds = bounds;
@@ -112,8 +135,6 @@ void CopyPanel::set_elements_text(const vector<vector<string>> &elements_s) {
 			  idx_bounds.y += 19.0f;
 			  idx_bounds.width -= 2.0f;
 			  idx_bounds.height = 19.0f;
-	int y_offset = 1;
-	Font font = GuiGetFont();
 	if (elements_s.size() == 1) {
 		bounds = { 385.0f, 40.0f, 150.0f, 192.0f };
 
@@ -131,7 +152,6 @@ void CopyPanel::set_elements_text(const vector<vector<string>> &elements_s) {
 				  scrollbar->set_bounds(scrollbar_bounds);
 		for (size_t i = 0; i + 2 < elements_s.size(); i++) {
 			Vector2 pos = { idx_bounds.x, idx_bounds.y };
-					pos.y = bounds.y + y_offset + (i + 1) * font.baseSize - scrollbar->get_scroll_val();
 			if (i >= 10) { pos.x -= font.baseSize / 2; }
 			idx_v.push_back({ pos, to_string(i), BLUE });
 			idx_bounds.y += 19.0f;
@@ -139,26 +159,19 @@ void CopyPanel::set_elements_text(const vector<vector<string>> &elements_s) {
 	}
 
 	Color element_color = GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL));
-	Rectangle element_bounds = bounds;
-			  element_bounds.x++;
-			  element_bounds.y -= 18;
 	for (size_t r = 0; r < elements_s.size(); r++) {
 		elements.push_back({});
 		for (size_t c = 0; c < elements[r].size() && c < elements_s[r].size(); c++) {
-			if (elements_s.size() > 1) {
-				element_bounds.y = bounds.y + y_offset + r * font.baseSize - scrollbar->get_scroll_val();
-			}
-			else {
-				element_bounds.y += 19.0f;
-			}
-			elements[r][c].set_pos({ element_bounds.x, element_bounds.y });
 			elements[r][c].set_text(elements_s[r][c]);
 			elements[r][c].set_color(element_color);
 		}
 	}
+
 	float scrollbar_max = y_offset + elements.size() * font.baseSize - bounds.height;
-	scrollbar->set_max_scroll(scrollbar_max);
-	//scrollbar->set_scroll_val(scrollbar_max);
+	if (scrollbar_max != scrollbar->get_max_scroll()) {
+		scrollbar->set_max_scroll(scrollbar_max);
+		scrollbar->set_scroll_val(scrollbar_max); 
+	}
 }
 
 string CopyPanel::format_elements() {
@@ -179,7 +192,6 @@ string CopyPanel::format_elements() {
 			str += "\n";
 		}
 	}
-	cout << str << endl;
 
 	str.pop_back();
 	return str;

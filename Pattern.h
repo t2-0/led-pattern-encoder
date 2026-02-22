@@ -21,6 +21,8 @@ public:
 	void reset();
 	void invert();
 
+	bool update_panel() { return update_panel_b; }
+
 	void set_state(PatternState state) { this->state = state; }
 	void set_type(PatternType type)    { this->type = type; }
 
@@ -34,12 +36,14 @@ private:
 	FramesManagerGui frames_gui;
 	FramesManager frames_manager;
 
+	bool update_panel_b = true;
+
 	Line* line_h = nullptr;
 	Line* line_v = nullptr;
 
 	PatternState state = PatternState::NORMAL;
 	PatternType type   = PatternType::DEFAULT;
-	PatternType old_type = PatternType::DEFAULT;
+	PatternType old_type = PatternType::ANIMATION; // force difference to pass very first normal stated pattern to panel
 
 	// i++; 0, 3; 4, 7;
 	void push_bits_v(int start_idx, int end_idx);

@@ -30,10 +30,12 @@ public:
 	vector<array<array <LedState, 8>, 8>> get_frame_states() { return frame_states; }
 	array<array <LedState, 8>, 8> get_active_state() { return active_state; }
 
+	bool is_updated() { return updated_b; }
+	void update_b() { updated_b = false; }
+
 	int get_idx() { return frame_idx; }
 	size_t get_states_size() { return frame_states.size(); }
 	float get_interval() { return interval; }
-
 private:
 	vector<array<array <LedState, 8>, 8>> frame_states;
 	array <array<LedState, 8>, 8> active_state = {};
@@ -44,6 +46,7 @@ private:
 
 	bool play_b = false;
 	bool repeat_b = false;
+	bool updated_b = true;
 
 	void set_active_states();
 	void set_frame_states();

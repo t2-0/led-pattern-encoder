@@ -135,6 +135,7 @@ public:
 	void set_max_scroll(float max_scroll) { this->max_scroll = max_scroll; }
 	void set_scroll_val(float scroll_val) { this->scroll_val = scroll_val; }
 
+	float get_max_scroll() { return max_scroll; }
 	float get_scroll_val() { return scroll_val; }
 private:
 	Rectangle bounds;
@@ -165,4 +166,7 @@ private:
 	Button* copy_btn = nullptr;
 
 	float color_factor = 1.0f;
+
+	Font font = GuiGetFont();
+	int y_offset = 1;
 };
