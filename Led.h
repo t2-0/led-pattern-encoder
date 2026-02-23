@@ -4,7 +4,7 @@
 
 class Led {
 public:
-	Led(Vector2 center, Color color);
+	Led(Vector2 center,  float radius, Color color);
 
 	void draw();
 
@@ -15,11 +15,12 @@ public:
 	void set_color(Color color) { this->color = color; }
 	void set_state(LedState state) { this->state = state; }
 
-	bool is_updated(LedState to_ignore) { if (state == to_ignore) return false; return state != old_state; }
+	bool is_updated() { return state != old_state; }
 	void update() { old_state = state; }
 
+	float get_radius();
+
 	static void init_colors();
-	static float get_radius();
 private:
 	Vector2 center;
 	Color color;
@@ -28,6 +29,6 @@ private:
 	LedState state = LedState::NORMAL;
 	LedState old_state = LedState::NORMAL;
 
-	static float radius;
+	float radius;
 	static Color line_color;
 };

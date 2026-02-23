@@ -84,6 +84,10 @@ CopyPanel::CopyPanel(Rectangle bounds, float color_factor) {
 
 	float font_size = GuiGetFont().baseSize;
 	scrollbar = new ScrollBar{ scrollbar_bounds, 0, font_size, elements.size() };
+
+	Vector2 container_pos = { bounds.x, bounds.y - 20.0f };
+	container_s.set_pos(container_pos);
+	container_s.set_color(RAYWHITE);
 }
 
 void CopyPanel::draw() {
@@ -124,10 +128,11 @@ void CopyPanel::draw() {
 	copy_btn->draw();
 	if(copy_btn->clicked()) { SetClipboardText(format_elements().c_str()); }
 	if (elements.size() > 1) { scrollbar->draw(); }
+
+	container_s.draw();
 }
 
 void CopyPanel::set_elements_text(const vector<vector<string>> &elements_s) {
-	cout << "set" << endl;
 	elements.clear();
 	idx_v.clear();
 	Rectangle idx_bounds = bounds;
@@ -136,7 +141,8 @@ void CopyPanel::set_elements_text(const vector<vector<string>> &elements_s) {
 			  idx_bounds.width -= 2.0f;
 			  idx_bounds.height = 19.0f;
 	if (elements_s.size() == 1) {
-		bounds = { 385.0f, 40.0f, 150.0f, 192.0f };
+		bounds = { bounds.x, bounds.y, 150.0f, 192.0f };
+		container_s.set_text("array<int, 8> ... = ");
 
 		for (size_t i = 0; i < 8; i++) {
 			Vector2 pos = { idx_bounds.x, idx_bounds.y };
@@ -145,15 +151,18 @@ void CopyPanel::set_elements_text(const vector<vector<string>> &elements_s) {
 		}
 	}
 	else {
-		bounds = { 385.0f, 40.0f, 350.0f, 192.0f };
+		bounds = { bounds.x, bounds.y, 350.0f, 192.0f };
+		container_s.set_text("vector<array<int, 8>> ... = ");
+
 		Rectangle scrollbar_bounds = bounds;
 				  scrollbar_bounds.x += bounds.width + 5;
 				  scrollbar_bounds.width = 10;
 				  scrollbar->set_bounds(scrollbar_bounds);
+
 		for (size_t i = 0; i + 2 < elements_s.size(); i++) {
 			Vector2 pos = { idx_bounds.x, idx_bounds.y };
 			if (i >= 10) { pos.x -= font.baseSize / 2; }
-			idx_v.push_back({ pos, to_string(i), BLUE });
+			idx_v.push_back({ pos, to_string(i), GREEN });
 			idx_bounds.y += 19.0f;
 		}
 	}

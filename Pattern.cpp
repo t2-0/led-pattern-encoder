@@ -20,6 +20,7 @@ void PatternGui::draw() {
 	mirror_v_toggle.draw();
 
 	mode_drop.draw();
+	display_amount.draw();
 }
 
 void PatternGui::update(Pattern& pattern) {
@@ -38,6 +39,9 @@ void PatternGui::update(Pattern& pattern) {
 	PatternType pattern_type = PatternType::DEFAULT;
 	if (mode_drop.get_active() == 1) { pattern_type = PatternType::ANIMATION; }
 	pattern.set_type(pattern_type);
+
+	DisplayAmount display_a = static_cast<DisplayAmount>(display_amount.get_active());
+	pattern.set_amount(display_a);
 }
 
 Pattern::Pattern() {
@@ -46,16 +50,21 @@ Pattern::Pattern() {
 	const float y_offset = 40.0f;
 
 	Vector2 led_pos = base_pos;
+	float radius = 15.0f;
 	Color color = GetColor(GuiGetStyle(BUTTON, BASE_COLOR_NORMAL));
+
+
 	for (int r = 0; r < 8; r++) {
 		leds.push_back({});
 		for (int c = 0; c < 8; c++) {
-			leds[r].push_back({ led_pos, color });
+			leds[r].push_back({ led_pos, radius, color });
 			led_pos.x += x_offset;
 		}
 		led_pos.x = base_pos.x;
 		led_pos.y += y_offset;
 	}
+	led_pos = base_pos;
+
 
 	int idx = 0;
 	for (size_t c = 0; c < leds.size(); c++, idx++) {
@@ -67,7 +76,6 @@ Pattern::Pattern() {
 		idx_h.push_back({ pos, s, BLUE });
 	}
 
-	float radius = Led::get_radius();
 	float x_pos = base_pos.x - radius;
 	float y_pos = (base_pos.y - radius) + y_offset * 4 - y_offset / 8;
 
@@ -87,20 +95,22 @@ Pattern::Pattern() {
 }
 
 void Pattern::draw() {
-	for (int i = 0; i < 8; i++) {
-		bits_v[i].draw();
-		idx_h[i].draw();
-	}
-
 	if(type == PatternType::ANIMATION){ frames_gui.draw(); }
+	if(display_amount == DisplayAmount::x1){
+		for (int i = 0; i < 8; i++) {
+			bits_v[i].draw();
+			idx_h[i].draw();
+		}
+		draw_leds(); 
+	}
+	else{}
 
-	draw_leds();
+	
 	draw_lines();
 }
 
 void Pattern::update() {
 	bool type_b = old_type != type;
-
 	update_panel_b = is_updated();
 	update_panel_b = update_panel_b || type_b;
 
@@ -267,8 +277,8 @@ void Pattern::convert_hex() {
 void Pattern::mirror_h(size_t row, size_t col) {
 	Vector2 mouse_pos = GetMousePosition();
 	size_t col_mirror = 8 - col - 1;
-
-	if (CheckCollisionPointCircle(mouse_pos, leds[row][col].get_pos(), Led::get_radius())) {
+	
+	if (CheckCollisionPointCircle(mouse_pos, leds[row][col].get_pos(), leds[row][col].get_radius())) {
 		LedState led_state = leds[row][col].get_state();
 		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
 			leds[row][col_mirror].set_state(led_state);
@@ -290,7 +300,7 @@ void Pattern::mirror_v(size_t row, size_t col) {
 	Vector2 mouse_pos = GetMousePosition();
 	size_t row_mirror = 8 - row - 1;
 
-	if (CheckCollisionPointCircle(mouse_pos, leds[row][col].get_pos(), Led::get_radius())) {
+	if (CheckCollisionPointCircle(mouse_pos, leds[row][col].get_pos(), leds[row][col].get_radius())) {
 		LedState led_state = leds[row][col].get_state();
 		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
 			leds[row_mirror][col].set_state(led_state);
@@ -313,7 +323,7 @@ void Pattern::mirror_hv(size_t row, size_t col) {
 	size_t row_mirror = 8 - row - 1;
 	size_t col_mirror = 8 - col - 1;
 
-	if (CheckCollisionPointCircle(mouse_pos, leds[row][col].get_pos(), Led::get_radius())) {
+	if (CheckCollisionPointCircle(mouse_pos, leds[row][col].get_pos(), leds[row][col].get_radius())) {
 		LedState led_state = leds[row][col].get_state();
 		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
 			leds[row_mirror][col_mirror].set_state(led_state);
@@ -347,7 +357,7 @@ bool Pattern::is_updated() {
 	bool b = false;
 	for (size_t r = 0; r < leds.size(); r++) {
 		for (size_t c = 0; c < leds[r].size(); c++) {
-			if (leds[r][c].is_updated(LedState::FOCUSED)) {
+			if (leds[r][c].is_updated()) {
 				b = true;
 				leds[r][c].update();
 			}

@@ -11,6 +11,7 @@
 
 using namespace std;
 
+
 class Pattern {
 public:
 	Pattern();
@@ -25,6 +26,7 @@ public:
 
 	void set_state(PatternState state) { this->state = state; }
 	void set_type(PatternType type)    { this->type = type; }
+	void set_amount(DisplayAmount amount) { this->display_amount = amount; }
 
 	vector<vector<string>> get_hex() { return hex_v; }
 private:
@@ -44,6 +46,7 @@ private:
 	PatternState state = PatternState::NORMAL;
 	PatternType type   = PatternType::DEFAULT;
 	PatternType old_type = PatternType::ANIMATION; // force difference to pass very first normal stated pattern to panel
+	DisplayAmount display_amount = DisplayAmount::x1;
 
 	// i++; 0, 3; 4, 7;
 	void push_bits_v(int start_idx, int end_idx);
@@ -74,4 +77,5 @@ private:
 	Toggle mirror_v_toggle = { { 120.0f, 370.0f, 30.0f, 30.0f }, GuiIconText(ICON_SYMMETRY_VERTICAL, nullptr) };
 
 	Dropdownbox mode_drop = { { 50.0f, 440.0f, 100.0f, 30.0f }, "Default;Animation" };
+	ToggleGroup display_amount = { { 160.0f, 440.0f, 30.0f, 30.0f }, "1x;4x" };
 };

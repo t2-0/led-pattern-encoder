@@ -1,6 +1,5 @@
 #include "Led.h"
 
-float Led::radius = 15.0f;
 Color Led::line_color = RAYWHITE;
 
 void Led::init_colors() {
@@ -11,8 +10,9 @@ float Led::get_radius() {
 	return radius;
 }
 
-Led::Led(Vector2 center, Color color) {
+Led::Led(Vector2 center, float radius, Color color) {
 	this->center = center;
+	this->radius = radius;
 	this->color = color;
 }
 

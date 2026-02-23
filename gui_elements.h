@@ -69,16 +69,31 @@ public:
 	void draw() { if (GuiToggle(bounds, text.c_str(), &active)) { active = !active; } }
 	bool is_active()  { return active; }
 	bool is_updated() { return active != active_old; }
+	void update() { active_old = active; }
 
 	void set_active(bool active) { this->active = active; }
-
-	void update() { active_old = active; }
 private:
 	Rectangle bounds;
 	string text;
 
 	bool active = false;
 	bool active_old = false;
+};
+
+class ToggleGroup {
+public:
+	ToggleGroup(Rectangle bounds, string text) { this->bounds = bounds; this->text = text; }
+
+	void draw() { GuiToggleGroup(bounds, text.c_str(), &active); }
+	bool is_updated() { return active != active_old; }
+	void update() { active_old = active; }
+
+	int get_active() { return active; }
+private:
+	Rectangle bounds;
+	string text;
+	int active = 0;
+	int active_old = 0;
 };
 
 class Line {
@@ -102,7 +117,7 @@ private:
 
 class TextEx {
 public:
-	TextEx() {}
+	TextEx() { color = RAYWHITE; pos = { 0.0f, 0.0f }; }
 	TextEx(Vector2 pos, string text, Color color);
 
 	void draw();
@@ -162,6 +177,8 @@ private:
 	Color line_color;
 	vector<array<TextEx, 10>> elements;
 	vector<TextEx> idx_v;
+
+	TextEx container_s;
 
 	Button* copy_btn = nullptr;
 

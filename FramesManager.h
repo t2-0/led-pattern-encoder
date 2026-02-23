@@ -64,13 +64,13 @@ private:
 	Button frame_back = { { 250.0f, 415.0f, 20.0f, 20.0f }, GuiIconText(ICON_ARROW_LEFT_FILL, nullptr) };
 	Button frame_forward = { { 338.0f, 415.0f, 20.0f, 20.0f }, GuiIconText(ICON_ARROW_RIGHT_FILL, nullptr) };
 
-	Toggle repeat_toggle = { { 250.0f, 465.0f, 20.0f, 20.0f }, GuiIconText(ICON_REPEAT, nullptr) };
-	Button stop_btn = { { 280.0f, 465.0f, 20.0f, 20.0f }, GuiIconText(ICON_PLAYER_STOP, nullptr) };
-	Button play_btn = { { 310.0f, 465.0f, 20.0f, 20.0f }, GuiIconText(ICON_PLAYER_PLAY,nullptr) };
+	Toggle repeat_toggle = { { 250.0f, 498.0f, 20.0f, 20.0f }, GuiIconText(ICON_REPEAT, nullptr) };
+	Button stop_btn = { { 280.0f, 498.0f, 20.0f, 20.0f }, GuiIconText(ICON_PLAYER_STOP, nullptr) };
+	Button play_btn = { { 310.0f, 498.0f, 20.0f, 20.0f }, GuiIconText(ICON_PLAYER_PLAY,nullptr) };
 
-	IntBox wait_input = { { 250.0f, 440.0f, 70.0f, 20.0f }, "wait_us: ", 0, 10000000, 1000000 };
+	IntBox wait_input = { { 250.0f, 472.0f, 70.0f, 20.0f }, "wait_us: ", 0, 10000000, 1000000 };
 
-	TextEx total_frames = { { 250.0f, 368.0f }, "Total Frames: ", GetColor(GuiGetStyle(BUTTON,TEXT_COLOR_NORMAL)) };
+	TextEx total_frames  = { { 250.0f, 368.0f }, "Total Frames: ", GetColor(GuiGetStyle(BUTTON,TEXT_COLOR_NORMAL)) };
 	TextEx current_frame = { { 275.0f, 415.0f }, "Frame: ", GetColor(GuiGetStyle(BUTTON,TEXT_COLOR_NORMAL)) };
-	TextEx interval_text = { { 320.0f, 440.0f }, "", GetColor(GuiGetStyle(BUTTON,TEXT_COLOR_NORMAL)) };
+	TextEx interval_text = { { 320.0f, 472.0f }, "", GetColor(GuiGetStyle(BUTTON,TEXT_COLOR_NORMAL)) };
 };
