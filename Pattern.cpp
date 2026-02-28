@@ -1,23 +1,23 @@
 #include "Pattern.h"
 #include <sstream>
 
-array<array<LedState, 8>, 8> get_states_from_leds(const vector<vector <Led>>& leds) {
+array<array<LedState, 8>, 8> get_states_from_leds(const array< array<array <Led, 8>, 8>, 4>& leds) {
 	array<array<LedState, 8>, 8> states;
 	for (size_t r = 0; r < states.size(); r++) {
 		for (size_t c = 0; c < states[r].size(); c++) {
-			states[r][c] = leds[r][c].get_state();
+			states[r][c] = leds[0][r][c].get_state();
 		}
 	}
 
 	return states;
 }
 
-void PatternGui::draw() {
+void PatternGui::draw(DisplayAmount amount) {
 	reset_btn.draw();
 	invert_btn.draw();
 
-	mirror_h_toggle.draw();
-	mirror_v_toggle.draw();
+	mirror_h_toggle_1x.draw();
+	mirror_v_toggle_1x.draw();
 
 	mode_drop.draw();
 	display_amount.draw();
@@ -27,8 +27,8 @@ void PatternGui::update(Pattern& pattern) {
 	if (reset_btn.clicked())  { pattern.reset(); }
 	if (invert_btn.clicked()) { pattern.invert(); }
 
-	bool draw_h = mirror_h_toggle.is_active();
-	bool draw_v = mirror_v_toggle.is_active();
+	bool draw_h = mirror_h_toggle_1x.is_active();
+	bool draw_v = mirror_v_toggle_1x.is_active();
 
 	PatternState pattern_state = PatternState::NORMAL;
 	if (draw_h) { pattern_state = PatternState::MIRROR_H; }
@@ -41,78 +41,55 @@ void PatternGui::update(Pattern& pattern) {
 	pattern.set_type(pattern_type);
 
 	DisplayAmount display_a = static_cast<DisplayAmount>(display_amount.get_active());
-	pattern.set_amount(display_a);
+	if (display_amount.is_updated()) { pattern.set_amount(display_a); display_amount.update(); }
 }
 
 Pattern::Pattern() {
-	const Vector2 base_pos = { 60.0f, 60.0f };
-	const float x_offset = 40.0f;
-	const float y_offset = 40.0f;
+	float x_4x_offset = 190.0f;
+	float offset = 21.0f;
 
+	Vector2 base_pos = { 35.0f, 60.0f };
 	Vector2 led_pos = base_pos;
-	float radius = 15.0f;
+	led_pos.x += x_4x_offset;
+
 	Color color = GetColor(GuiGetStyle(BUTTON, BASE_COLOR_NORMAL));
-
-
-	for (int r = 0; r < 8; r++) {
-		leds.push_back({});
-		for (int c = 0; c < 8; c++) {
-			leds[r].push_back({ led_pos, radius, color });
-			led_pos.x += x_offset;
+	for (size_t i = 1; i < 4; i++) {
+		led_pos.x = base_pos.x + x_4x_offset * i;
+		led_pos.y = base_pos.y;
+		for (int r = 0; r < 8; r++) {
+			for (int c = 0; c < 8; c++) {
+				leds[i][r][c].set_center(led_pos);
+				led_pos.x += offset;
+			}
+			led_pos.x = base_pos.x + x_4x_offset * i;
+			led_pos.y += offset;
 		}
-		led_pos.x = base_pos.x;
-		led_pos.y += y_offset;
-	}
-	led_pos = base_pos;
-
-
-	int idx = 0;
-	for (size_t c = 0; c < leds.size(); c++, idx++) {
-		string s = to_string(idx);
-		Vector2 pos = leds[c][0].get_pos();
-				pos.y -= 7.0f;
-				pos.x -= 28.0f;
-
-		idx_h.push_back({ pos, s, BLUE });
 	}
 
-	float x_pos = base_pos.x - radius;
-	float y_pos = (base_pos.y - radius) + y_offset * 4 - y_offset / 8;
+	for (size_t r = 0; r < leds[0].size(); r++) {
+		string s = to_string(r);
+		idx_h[r].set_text(s);
+		idx_h[r].set_color(BLUE);
+	}
 
-	Vector2 pos_start = { x_pos, y_pos };
-	Vector2 pos_end   = { x_pos * 8, y_pos };
-	line_v = new Line{ pos_start, pos_end, 1.0f, RAYWHITE };
-
-	x_pos = (base_pos.x - radius) + x_offset * 4 - x_offset / 8;
-	y_pos = base_pos.y - radius;
-
-	pos_start = { x_pos, y_pos };
-	pos_end   = { x_pos, y_pos * 8 };
-	line_h = new Line{ pos_start, pos_end, 1.0f, RAYWHITE };
-
-	push_bits_v(0, 3);
-	push_bits_v(4, 7);
+	set_amount(display_amount);
 }
 
 void Pattern::draw() {
-	if(type == PatternType::ANIMATION){ frames_gui.draw(); }
-	if(display_amount == DisplayAmount::x1){
-		for (int i = 0; i < 8; i++) {
-			bits_v[i].draw();
-			idx_h[i].draw();
-		}
-		draw_leds(); 
-	}
-	else{}
+	if(type == PatternType::ANIMATION) { frames_gui.draw(); }
+	for(size_t i = 0; i < idx_h.size(); i++) { idx_h[i].draw(); }
+	for(size_t i = 0; i < bits_v.size(); i++) { bits_v[i].draw(); }
 
-	
+	draw_leds();
 	draw_lines();
 }
 
 void Pattern::update() {
 	bool type_b = old_type != type;
-	update_panel_b = is_updated();
 	update_panel_b = update_panel_b || type_b;
+
+	pair<bool, bool>update_manager_panel = leds_updated();
+	if (update_manager_panel.second) { update_panel_b = true; }
 
 	if (type == PatternType::ANIMATION) {
 		frames_gui.update(frames_manager);
@@ -125,47 +102,67 @@ void Pattern::update() {
 
 		// if leds state updated -> update active states for manager
 		// otherwise if active manager state updated -> update leds states
-		if (update_panel_b) { frames_manager.set_active_states(leds_states); }
+		if (update_manager_panel.first) { frames_manager.set_active_states(leds_states); }
 		else if (frame_states != leds_states) { set_leds_states(frame_states); }
 
 		update_panel_b = update_panel_b || frames_manager.is_updated();
 		frames_manager.update();
 		frames_manager.update_b();
 	}
-	old_type = type;
+	update_panel_b = update_panel_b || (old_amount != display_amount);
 
-	if (update_panel_b) { convert_hex(); }
+	old_type = type;
+	old_amount = display_amount;
+	leds_update();
 }
 
 void Pattern::reset() {
-	for (size_t r = 0; r < leds.size(); r++) {
-		for (size_t c = 0; c < leds[r].size(); c++) {
-			leds[r][c].set_state(LedState::NORMAL);
+	for (size_t i = 0; i < leds_active_size; i++) {
+		for (size_t r = 0; r < leds[i].size(); r++) {
+			for (size_t c = 0; c < leds[i][r].size(); c++) {
+				leds[i][r][c].set_state(LedState::OFF);
+			}
 		}
 	}
 }
 
 void Pattern::invert() {
-	for (size_t r = 0; r < leds.size(); r++) {
-		for (size_t c = 0; c < leds[r].size(); c++) {
-			if (leds[r][c].get_state() == LedState::PRESSED) {
-				leds[r][c].set_state(LedState::NORMAL);
-			}
-			else {
-				leds[r][c].set_state(LedState::PRESSED);
+	for (size_t i = 0; i < leds_active_size; i++) {
+		for (size_t r = 0; r < leds[i].size(); r++) {
+			for (size_t c = 0; c < leds[i][r].size(); c++) {
+				if (leds[i][r][c].get_state() == LedState::ON) {
+					leds[i][r][c].set_state(LedState::OFF);
+				}
+				else {
+					leds[i][r][c].set_state(LedState::ON);
+				}
 			}
 		}
 	}
 }
 
 void Pattern::draw_leds() {
-	for (size_t r = 0; r < leds.size(); r++) {
-		for (size_t c = 0; c < leds[r].size(); c++) {
-			leds[r][c].draw();
-			switch (state) {
-			case PatternState::MIRROR_H: mirror_h(r, c); break;
-			case PatternState::MIRROR_V: mirror_v(r, c); break;
-			case PatternState::MIRROR_HV: mirror_hv(r, c);break;
+	for (size_t i = 0; i < leds_active_size; i++) {
+		for (size_t r = 0; r < leds[i].size(); r++) {
+			for (size_t c = 0; c < leds[i][r].size(); c++) {
+				leds[i][r][c].draw();
+
+				switch (state) {
+					case PatternState::MIRROR_H: 
+							mirror_h(i, r, c);
+						break;
+					case PatternState::MIRROR_V: 
+							mirror_v(i, r, c);
+						break;
+					case PatternState::MIRROR_HV: 
+						if (display_amount == DisplayAmount::x1) { 
+							mirror_hv(i, r, c);
+						}
+						else {
+							mirror_hv_4x(i, r, c);
+						}
+						break;
+				}
 			}
 		}
 	}
@@ -174,72 +171,53 @@ void Pattern::draw_leds() {
 void Pattern::draw_lines() {
 	switch (state) {
 	case PatternState::MIRROR_H:
-		line_h->draw();
+		line_h.draw();
 		break;
 	case PatternState::MIRROR_V:
-		line_v->draw();
+		line_v.draw();
 		break;
 	case PatternState::MIRROR_HV:
-		line_h->draw();
-		line_v->draw();
+		line_h.draw();
+		line_v.draw();
 		break;
 	}
 }
 
 void Pattern::push_bits_v(int start_idx, int end_idx) {
 	Font font = GuiGetFont();
+
+	float y_offset;
 	int b = 8;
 
-	for (int c = start_idx; c <= end_idx; c++) {
-		string s = to_string(b);
+	if (display_amount == DisplayAmount::x1) { y_offset = 35.0f; }
+	else { y_offset = 25.0f; }
 
-		Vector2 pos = leds[0][c].get_pos();
-				pos.y -= 35.0f;
-				pos.x -= round(MeasureTextEx(font, s.c_str(), font.baseSize, 0.0f).x / 2);
+	Color color = GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL));
+	for (int i = 0; i < leds_active_size; i++) {
+		b = 8;
+		for (int c = start_idx; c <= end_idx; c++) {
+			string s = to_string(b);
 
-		Color color = GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL));
-		bits_v.push_back({ pos, s, color });
+			Vector2 pos = leds[i][0][c].get_pos();
+					pos.x -= round(MeasureTextEx(font, s.c_str(), font.baseSize, 0.0f).x / 2);
+					pos.y -= y_offset;
 
-		b /= 2;
+			bits_v.push_back({ pos, s, color });
+
+			b /= 2;
+		}
 	}
 }
 
-void Pattern::convert_hex() {
-	if (type == PatternType::DEFAULT) {
-		hex_v.clear();
-		hex_v.push_back({});
-		hex_v[0].push_back("= {");
+vector<vector<string>> Pattern::convert_hex() {
+	vector<vector<string>> hex_v;
 
-		for (size_t r = 0; r < leds.size(); r++) {
-			stringstream ss;
-			int bits_idx = 0;
-			int val = 0;
+	hex_v.push_back({});
+	hex_v[0].push_back("= {");
 
-			for (int i = 0; i < 4; i++, bits_idx++) {
-				if (leds[r][i].get_state() == LedState::PRESSED) {
-					val += stoi(bits_v[bits_idx].get_text());
-				}
-			}
-			ss << "\t\t\t0x" << hex << uppercase << val;
-			val = 0;
-
-			for (int i = 4; i < 8; i++, bits_idx++) {
-				if (leds[r][i].get_state() == LedState::PRESSED) {
-					val += stoi(bits_v[bits_idx].get_text());
-				}
-			}
-			ss << hex << uppercase << val << ",";
-			hex_v[0].push_back(ss.str());
-		}
-		hex_v[0].back().pop_back();
-		hex_v[0].push_back("};");
-	}
-	else {
+	if (type == PatternType::ANIMATION) {
 		vector<array<array <LedState, 8>, 8>> states = frames_manager.get_frame_states();
 
-		hex_v.clear();
-		hex_v.push_back({});
-		hex_v[0].push_back("= {");
 		for (size_t i = 0; i < states.size(); i++) {
 			hex_v.push_back({});
 			stringstream ss;
@@ -248,16 +226,16 @@ void Pattern::convert_hex() {
 				int bits_idx = 0;
 				int val = 0;
 
-				for (int b = 0; b < 4; b++, bits_idx++) {
-					if (states[i][r][b] == LedState::PRESSED) {
+				for (int c = 0; c < 4; c++, bits_idx++) {
+					if (states[i][r][c] == LedState::ON) {
 						val += stoi(bits_v[bits_idx].get_text());
 					}
 				}
 				ss << "0x" << hex << uppercase << val;
 				val = 0;
 
-				for (int b = 4; b < 8; b++, bits_idx++) {
-					if (states[i][r][b] == LedState::PRESSED) {
+				for (int c = 4; c < 8; c++, bits_idx++) {
+					if (states[i][r][c] == LedState::ON) {
 						val += stoi(bits_v[bits_idx].get_text());
 					}
 				}
@@ -271,105 +249,318 @@ void Pattern::convert_hex() {
 		if (hex_v.size() > 1) { hex_v.back().back().pop_back(); } // pop ','
 		hex_v.push_back({});
 		hex_v.back().push_back("};");
+	} // t?
+	else if (display_amount == DisplayAmount::x4) {
+		for (size_t i = 0; i < leds_active_size; i++) {
+			hex_v.push_back({});
+			stringstream ss;
+			ss << "\t\t\t{ ";
+			for (size_t r = 0; r < leds[i].size(); r++) {
+				int bits_idx = 0;
+				int val = 0;
+
+				for (int c = 0; c < 4; c++, bits_idx++) {
+					if (leds[i][r][c].get_state() == LedState::ON) {
+						val += stoi(bits_v[bits_idx].get_text());
+					}
+				}
+				ss << "0x" << hex << uppercase << val;
+				val = 0;
+
+				for (int c = 4; c < 8; c++, bits_idx++) {
+					if (leds[i][r][c].get_state() == LedState::ON) {
+						val += stoi(bits_v[bits_idx].get_text());
+					}
+				}
+				ss << hex << uppercase << val << ", ";
+			}
+			hex_v[i + 1].push_back(ss.str());
+			hex_v[i + 1].back().pop_back(); // pop ' '
+			hex_v[i + 1].back().pop_back(); // pop ','
+			hex_v[i + 1].back() += " },";
+		}
+		if (hex_v.size() > 1) { hex_v.back().back().pop_back(); } // pop ','
+		hex_v.push_back({});
+		hex_v.back().push_back("};");
+
 	}
+	else {
+		for (size_t r = 0; r < leds[0].size(); r++) {
+			stringstream ss;
+			int bits_idx = 0;
+			int val = 0;
+
+			for (int c = 0; c < 4; c++, bits_idx++) {
+				if (leds[0][r][c].get_state() == LedState::ON) {
+					val += stoi(bits_v[bits_idx].get_text());
+				}
+			}
+			ss << "\t\t\t0x" << hex << uppercase << val;
+			val = 0;
+
+			for (int c = 4; c < 8; c++, bits_idx++) {
+				if (leds[0][r][c].get_state() == LedState::ON) {
+					val += stoi(bits_v[bits_idx].get_text());
+				}
+			}
+			ss << hex << uppercase << val << ",";
+			hex_v[0].push_back(ss.str());
+		}
+		hex_v[0].back().pop_back();
+		hex_v[0].push_back("};");
+	}
+
+	return hex_v;
 }
 
-void Pattern::mirror_h(size_t row, size_t col) {
+void Pattern::mirror_h(size_t i, size_t row, size_t col) {
 	Vector2 mouse_pos = GetMousePosition();
 	size_t col_mirror = 8 - col - 1;
-	
-	if (CheckCollisionPointCircle(mouse_pos, leds[row][col].get_pos(), leds[row][col].get_radius())) {
-		LedState led_state = leds[row][col].get_state();
+	size_t i_orig = i;
+	if (display_amount == DisplayAmount::x4) { i = 4 - i - 1; }
+
+	if (CheckCollisionPointCircle(mouse_pos, leds[i_orig][row][col].get_pos(), leds[i_orig][row][col].get_radius())) {
+		LedState led_state = leds[i_orig][row][col].get_state();
+
 		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-			leds[row][col_mirror].set_state(led_state);
+			leds[i][row][col_mirror].set_state(led_state);
 		}
 
-		if (leds[row][col].get_state() == LedState::FOCUSED) {
-			if (leds[row][col_mirror].get_state() != LedState::PRESSED) {
-				leds[row][col_mirror].set_state(led_state);
+		if (leds[i_orig][row][col].get_state() == LedState::FOCUSED) {
+			if (leds[i][row][col_mirror].get_state() != LedState::ON) {
+				leds[i][row][col_mirror].set_state(led_state);
 			}
-			leds[row][col_mirror].set_forced_state(true);
+			leds[i][row][col_mirror].set_forced_state(true);
 		}
 	}
 	else {
-		leds[row][col_mirror].set_forced_state(false);
+		leds[i][row][col_mirror].set_forced_state(false);
 	}
 }
 
-void Pattern::mirror_v(size_t row, size_t col) {
+void Pattern::mirror_hv(size_t i, size_t row, size_t col) {
+	Vector2 mouse_pos = GetMousePosition();
+	size_t row_mirror = 8 - row - 1;
+	size_t col_mirror = 8 - col - 1;
+
+	if (CheckCollisionPointCircle(mouse_pos, leds[i][row][col].get_pos(), leds[i][row][col].get_radius())) {
+		LedState led_state = leds[i][row][col].get_state();
+
+		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+			leds[i][row_mirror][col_mirror].set_state(led_state);
+			leds[i][row_mirror][col].set_state(led_state);
+			leds[i][row][col_mirror].set_state(led_state);
+		}
+
+		if (leds[i][row][col].get_state() == LedState::FOCUSED) {
+			if (leds[i][row_mirror][col_mirror].get_state() != LedState::ON) {
+				leds[i][row_mirror][col_mirror].set_state(led_state);
+			}
+			if (leds[i][row_mirror][col].get_state() != LedState::ON) {
+				leds[i][row_mirror][col].set_state(led_state);
+			}
+			if (leds[i][row][col_mirror].get_state() != LedState::ON) {
+				leds[i][row][col_mirror].set_state(led_state);
+			}
+
+			leds[i][row_mirror][col_mirror].set_forced_state(true);
+			leds[i][row_mirror][col].set_forced_state(true);
+			leds[i][row][col_mirror].set_forced_state(true);
+		}
+	}
+	else {
+		leds[i][row][col].set_forced_state(false);
+	}
+}
+
+void Pattern::mirror_hv_4x(size_t i, size_t row, size_t col) {
+	Vector2 mouse_pos = GetMousePosition();
+	size_t row_mirror = 8 - row - 1;
+	size_t col_mirror = 8 - col - 1;
+	size_t i_orig = i;
+	i = 4 - i - 1;
+
+	if (CheckCollisionPointCircle(mouse_pos, leds[i_orig][row][col].get_pos(), leds[i_orig][row][col].get_radius())) {
+		LedState led_state = leds[i_orig][row][col].get_state();
+
+		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+			leds[i][row_mirror][col_mirror].set_state(led_state);
+			leds[i_orig][row_mirror][col].set_state(led_state);
+			leds[i][row][col_mirror].set_state(led_state);
+		}
+
+		if (leds[i_orig][row][col].get_state() == LedState::FOCUSED) {
+			if (leds[i][row_mirror][col].get_state() != LedState::ON) {
+				leds[i][row_mirror][col].set_state(led_state);
+			}
+			if (leds[i_orig][row_mirror][col].get_state() != LedState::ON) {
+				leds[i_orig][row_mirror][col].set_state(led_state);
+				leds[i][row_mirror][col_mirror].set_state(led_state);
+			}
+			if (leds[i][row][col_mirror].get_state() != LedState::ON) {
+				leds[i][row][col_mirror].set_state(led_state);
+			}
+
+			leds[i][row_mirror][col_mirror].set_forced_state(true);
+			leds[i_orig][row_mirror][col].set_forced_state(true);
+			leds[i][row_mirror][col_mirror].set_forced_state(true);
+			leds[i][row][col_mirror].set_forced_state(true);
+		}
+	}
+	else {
+		leds[i_orig][row][col].set_forced_state(false);
+	}
+}
+
+void Pattern::mirror_v(size_t i, size_t row, size_t col) {
 	Vector2 mouse_pos = GetMousePosition();
 	size_t row_mirror = 8 - row - 1;
 
-	if (CheckCollisionPointCircle(mouse_pos, leds[row][col].get_pos(), leds[row][col].get_radius())) {
-		LedState led_state = leds[row][col].get_state();
+	if (CheckCollisionPointCircle(mouse_pos, leds[i][row][col].get_pos(), leds[i][row][col].get_radius())) {
+		LedState led_state = leds[i][row][col].get_state();
+
 		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-			leds[row_mirror][col].set_state(led_state);
+			leds[i][row_mirror][col].set_state(led_state);
 		}
 
-		if (leds[row][col].get_state() == LedState::FOCUSED) {
-			if (leds[row_mirror][col].get_state() != LedState::PRESSED) {
-				leds[row_mirror][col].set_state(led_state);
+		if (leds[i][row][col].get_state() == LedState::FOCUSED) {
+			if (leds[i][row_mirror][col].get_state() != LedState::ON) {
+				leds[i][row_mirror][col].set_state(led_state);
 			}
-			leds[row_mirror][col].set_forced_state(true);
+			leds[i][row_mirror][col].set_forced_state(true);
 		}
 	}
 	else {
-		leds[row_mirror][col].set_forced_state(false);
+		leds[i][row_mirror][col].set_forced_state(false);
 	}
-}
-
-void Pattern::mirror_hv(size_t row, size_t col) {
-	Vector2 mouse_pos = GetMousePosition();
-	size_t row_mirror = 8 - row - 1;
-	size_t col_mirror = 8 - col - 1;
-
-	if (CheckCollisionPointCircle(mouse_pos, leds[row][col].get_pos(), leds[row][col].get_radius())) {
-		LedState led_state = leds[row][col].get_state();
-		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-			leds[row_mirror][col_mirror].set_state(led_state);
-			leds[row_mirror][col].set_state(led_state);
-			leds[row][col_mirror].set_state(led_state);
-		}
-
-		if (leds[row][col].get_state() == LedState::FOCUSED) {
-			if (leds[row_mirror][col_mirror].get_state() != LedState::PRESSED) {
-				leds[row_mirror][col_mirror].set_state(led_state);
-			}
-			if (leds[row_mirror][col].get_state() != LedState::PRESSED) {
-				leds[row_mirror][col].set_state(led_state);
-			}
-			if (leds[row][col_mirror].get_state() != LedState::PRESSED) {
-				leds[row][col_mirror].set_state(led_state);
-			}
-
-			leds[row_mirror][col_mirror].set_forced_state(true);
-			leds[row_mirror][col].set_forced_state(true);
-			leds[row][col_mirror].set_forced_state(true);
-		}
-
-	}
-	else {
-		leds[row][col].set_forced_state(false);
-	}
-}
-
-bool Pattern::is_updated() {
-	bool b = false;
-	for (size_t r = 0; r < leds.size(); r++) {
-		for (size_t c = 0; c < leds[r].size(); c++) {
-			if (leds[r][c].is_updated()) {
-				b = true;
-				leds[r][c].update();
-			}
-		}
-	}
-	return b;
 }
 
 void Pattern::set_leds_states(array<array<LedState, 8>, 8> states) {
-	for (size_t r = 0; r < states.size(); r++) {
-		for (size_t c = 0; c < states[r].size(); c++) {
-			leds[r][c].set_state(states[r][c]);
+	for (size_t i = 0; i < leds_active_size; i++) {
+		for (size_t r = 0; r < states.size(); r++) {
+			for (size_t c = 0; c < states[r].size(); c++) {
+				leds[i][r][c].set_state(states[r][c]);
+			}
+		}
+	}
+}
+
+void Pattern::set_amount(DisplayAmount display_amount) {
+	this->display_amount = display_amount;
+	bits_v.clear();
+
+	float offset;
+	float radius;
+	float x_idx_offset;
+	Vector2 base_pos;
+
+	if (display_amount == DisplayAmount::x1) {
+		leds_active_size = 1;
+
+		offset = 41.0f;
+		radius = 15.0f;
+		x_idx_offset = 28.0f;
+
+		base_pos = { 60.0f, 60.0f };
+
+		float x_pos = base_pos.x - radius;
+		float y_pos = (base_pos.y - radius) + offset * 4 - offset / 8;
+
+		Vector2 pos_start = { x_pos, y_pos };
+		x_pos += offset * 8 - radius;
+		Vector2 pos_end = { x_pos, y_pos };
+		line_v = { pos_start, pos_end, 1.0f, RAYWHITE };
+
+		x_pos = (base_pos.x - radius) + offset * 4 - offset / 8;
+		y_pos = base_pos.y - radius;
+
+		pos_start = { x_pos, y_pos };
+		y_pos += offset * 8 - radius / 2;
+		pos_end = { x_pos, y_pos };
+		line_h = { pos_start, pos_end, 1.0f, RAYWHITE };
+	}
+	else {
+		leds_active_size = 4;
+
+		offset = 21.0f;
+		radius = 8.0f;
+		x_idx_offset = 21.0f;
+
+		base_pos = { 35.0f, 60.0f };
+
+		float x1 = leds[2][0][0].get_pos().x;
+		float x2 = leds[1][0][7].get_pos().x;
+
+		float x_pos = (x1 + x2) / 2;
+		float y_pos = base_pos.y - radius;
+
+		Vector2 pos_start = { x_pos, y_pos };
+		float y = leds[2][7][0].get_pos().y;
+		y_pos =  y + radius;
+		Vector2 pos_end = { x_pos, y_pos };
+		line_h = { pos_start, pos_end, 1.0f, RAYWHITE };
+
+
+		x1 = leds[3][0][7].get_pos().x;
+		y = leds[1][7][0].get_pos().y;
+		base_pos = { 35.0f, 60.0f };
+		x_pos = base_pos.x - radius;
+		y_pos = base_pos.y - (base_pos.y - y) / 2;
+
+		pos_start = { x_pos, y_pos };
+		x_pos = x1 + radius;
+		pos_end = { x_pos, y_pos };
+
+		line_v = { pos_start, pos_end, 1.0f, RAYWHITE };
+	}
+
+	Vector2 led_pos = base_pos;
+	for (int r = 0; r < 8; r++) {
+		for (int c = 0; c < 8; c++) {
+			leds[0][r][c].set_center(led_pos);
+			led_pos.x += offset;
+		}
+		led_pos.x = base_pos.x;
+		led_pos.y += offset;
+	}
+
+	for (size_t r = 0; r < leds[0].size(); r++) {
+		Vector2 pos = leds[0][r][0].get_pos();
+		pos.x -= x_idx_offset;
+		pos.y -= 7.0f;
+
+		idx_h[r].set_pos(pos);
+	}
+
+	push_bits_v(0, 3);
+	push_bits_v(4, 7);
+
+	Led::set_radius(radius);
+}
+
+pair<bool, bool> Pattern::leds_updated() {
+	pair<bool, bool> updated_normal_ignored = { false, false };
+	for (size_t i = 0; i < leds_active_size; i++) {
+		for (size_t r = 0; r < leds[i].size(); r++) {
+			for (size_t c = 0; c < leds[i][r].size(); c++) {
+				if (leds[i][r][c].is_updated()) {
+					updated_normal_ignored.first = true;
+					if (leds[i][r][c].is_updated(LedState::FOCUSED)) {
+						updated_normal_ignored.second = true;
+					}
+				}
+			}
+		}
+	}
+	return updated_normal_ignored;
+}
+
+void Pattern::leds_update() {
+	for (size_t i = 0; i < leds_active_size; i++) {
+		for (size_t r = 0; r < leds[i].size(); r++) {
+			for (size_t c = 0; c < leds[i][r].size(); c++) {
+				leds[i][r][c].update();
+			}
 		}
 	}
 }

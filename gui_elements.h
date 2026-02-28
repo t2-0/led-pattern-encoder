@@ -27,7 +27,7 @@ private:
 
 class Dropdownbox {
 public:
-	Dropdownbox(Rectangle bounds, string text) { this->bounds = bounds; this->text = text; }
+	Dropdownbox(Rectangle bounds, string text) : bounds{ bounds }, text{ text } { }
 	void draw() {if (GuiDropdownBox(bounds, text.c_str(), &active, edit_mode)) { edit_mode = !edit_mode; } }
 
 	int get_active() { return active; }
@@ -45,7 +45,7 @@ private:
 
 class Button {
 public:
-	Button(Rectangle bounds, string text) { this->bounds = bounds; this->text = text; }
+	Button(Rectangle bounds, string text) : bounds{ bounds }, text{ text } {}
 	void draw() { clicked_b = GuiButton(bounds, text.c_str()); }
 
 	bool clicked() {
@@ -64,7 +64,7 @@ private:
 
 class Toggle {
 public:
-	Toggle(Rectangle bounds, string text) { this->bounds = bounds; this->text = text; }
+	Toggle(Rectangle bounds, string text) : bounds{ bounds }, text{ text } {}
 
 	void draw() { if (GuiToggle(bounds, text.c_str(), &active)) { active = !active; } }
 	bool is_active()  { return active; }
@@ -82,7 +82,7 @@ private:
 
 class ToggleGroup {
 public:
-	ToggleGroup(Rectangle bounds, string text) { this->bounds = bounds; this->text = text; }
+	ToggleGroup(Rectangle bounds, string text) : bounds{ bounds }, text{ text } {}
 
 	void draw() { GuiToggleGroup(bounds, text.c_str(), &active); }
 	bool is_updated() { return active != active_old; }
@@ -98,14 +98,16 @@ private:
 
 class Line {
 public:
-	Line(Vector2 start_pos, Vector2 end_pos, float thick, Color color) {
-		this->start_pos = start_pos;
-		this->end_pos = end_pos;
-		this->thick = thick;
-		this->color = color;
-	}
+	Line() : start_pos{ 0 }, end_pos{ 0.0f }, thick{ 0.0f }, color{ RAYWHITE } {}
+	Line(Vector2 start_pos, Vector2 end_pos, float thick, Color color) : start_pos{ start_pos }, end_pos{ end_pos },
+																		 thick{ thick }, color{ color } { }
 
 	void draw() { DrawLineEx(start_pos, end_pos, thick, color); }
+
+	void set_start_pos(Vector2 start_pos) { this->start_pos = start_pos; }
+	void set_end_pos(Vector2 end_pos) { this->end_pos = end_pos; }
+	void set_thick(float thick) { this->thick = thick; }
+	void set_color(Color color) { this->color = color; }
 private:
 	Vector2 start_pos;
 	Vector2 end_pos;

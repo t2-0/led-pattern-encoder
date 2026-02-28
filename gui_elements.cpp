@@ -10,12 +10,8 @@ Color adjust_brightness(Color c, float factor) {
 			 c.a };
 }
 
-IntBox::IntBox(Rectangle bounds, string text, int min_val, int max_val, int val = 0) {
-	this->bounds  = bounds;
-	this->min_val = min_val;
-	this->max_val = max_val;
-	value = val;
-
+IntBox::IntBox(Rectangle bounds, string text, int min_val, int max_val, int val = 0) :
+	bounds{ bounds }, min_val{ min_val }, max_val{ max_val }, value{ val } {
 	this->text = new char[text.size()] {};
 	strcpy(this->text, text.c_str());
 }

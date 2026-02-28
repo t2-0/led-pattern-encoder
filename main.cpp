@@ -21,12 +21,12 @@ int main() {
 		ClearBackground(bg_color);
 
 		pattern.draw();
-		pattern_gui.draw();
+		pattern_gui.draw(pattern.get_amount());
 		
 		pattern.update();
 		pattern_gui.update(pattern);
 
-		if (pattern.update_panel()) { panel.set_elements_text(pattern.get_hex()); }
+		if (pattern.update_panel()) { cout << "updated\n"; panel.set_elements_text(pattern.convert_hex()); pattern.reset_update_panel(); }
 		panel.draw();
 
 		EndDrawing();

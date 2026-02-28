@@ -50,7 +50,7 @@ void FramesManagerGui::update(FramesManager& manager) {
 FramesManager::FramesManager() {
 	for (size_t r = 0; r < active_state.size(); r++) {
 		for (size_t c = 0; c < active_state[r].size(); c++) {
-			active_state[r][c] = LedState::NORMAL;
+			active_state[r][c] = LedState::OFF;
 		}
 	}
 }
@@ -103,16 +103,13 @@ void FramesManager::update() {
 
 void FramesManager::add_frame() {
 	if (frame_states.size() < 64) {
-		cout << "add\n";
 		frame_states.push_back(active_state);
 		frame_idx = frame_states.size() - 1;
-		cout << frame_idx << endl;
 		updated_b = true;
 	}
 }
 
 void FramesManager::del_frame() {
-	cout << "del\n";
 	if (!frame_states.empty()) { frame_states.pop_back(); }
 	if (frame_idx >= frame_states.size()) {
 		if (frame_states.empty()) {
@@ -122,7 +119,6 @@ void FramesManager::del_frame() {
 			frame_idx = frame_states.size() - 1;
 			set_active_states();
 		}
-		cout << frame_idx << endl;
 		updated_b = true;
 	}
 }
@@ -143,7 +139,6 @@ void FramesManager::frame_forward() {
 
 void FramesManager::play() {
 	if (!frame_states.empty()) {
-		cout << "true\n";
 		play_b = true;
 		frame_idx = 0;
 		set_active_states();
