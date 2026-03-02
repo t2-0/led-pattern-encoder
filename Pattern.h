@@ -48,7 +48,7 @@ private:
 	PatternState state = PatternState::NORMAL;
 
 	PatternType type   = PatternType::DEFAULT;
-	PatternType old_type = PatternType::DEFAULT;
+	PatternType old_type = PatternType::ANIMATION;
 
 	DisplayAmount display_amount = DisplayAmount::x1;
 	DisplayAmount old_amount = DisplayAmount::x1;
@@ -67,10 +67,11 @@ private:
 
 	void mirror_v(size_t i, size_t row, size_t col);
 
-	pair<bool, bool> leds_updated();
+	bool leds_updated();
 	void leds_update();
 
-	void set_leds_states(array<array<LedState, 8>, 8> states);
+	void set_leds_states(array<array<array<LedState, 8>, 8>, 4> states);
+	array<array<array<LedState, 8>, 8>, 4> get_states_from_leds();
 };
 
 class PatternGui {

@@ -10,8 +10,6 @@ using namespace std;
 
 class FramesManager {
 public:
-	FramesManager();
-
 	void update();
 
 	void add_frame();
@@ -25,10 +23,10 @@ public:
 	void repeat() { repeat_b = true; }
 
 	void set_interval(float interval) { this->interval = interval; }
-	void set_active_states(array <array<LedState, 8>, 8> active_state) { this->active_state = active_state; }
+	void set_active_states(array<array<array<LedState, 8>, 8>, 4>active_states) { this->active_states = active_states; }
 
-	vector<array<array <LedState, 8>, 8>> get_frame_states() { return frame_states; }
-	array<array <LedState, 8>, 8> get_active_state() { return active_state; }
+	vector<array<array<array <LedState, 8>, 8>, 4>> get_frame_states() { return frame_states; }
+	array<array<array<LedState, 8>, 8>, 4> get_active_state() { return active_states; }
 
 	bool is_updated() { return updated_b; }
 	void update_b() { updated_b = false; }
@@ -37,8 +35,8 @@ public:
 	size_t get_states_size() { return frame_states.size(); }
 	float get_interval() { return interval; }
 private:
-	vector<array<array <LedState, 8>, 8>> frame_states;
-	array <array<LedState, 8>, 8> active_state = {};
+	vector<array<array<array <LedState, 8>, 8>, 4>> frame_states;
+	array<array<array<LedState, 8>, 8>, 4> active_states = {};
 	int frame_idx = -1;
 
 	float timer = 0.0f;

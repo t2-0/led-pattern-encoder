@@ -47,13 +47,6 @@ void FramesManagerGui::update(FramesManager& manager) {
 	interval_text.set_text(interval_str);
 }
 
-FramesManager::FramesManager() {
-	for (size_t r = 0; r < active_state.size(); r++) {
-		for (size_t c = 0; c < active_state[r].size(); c++) {
-			active_state[r][c] = LedState::OFF;
-		}
-	}
-}
 vector <vector<LedState>> FramesManager::get_states_from_leds(const vector<vector <Led>>& leds) {
 	vector<vector<LedState>> states;
 	for (size_t r = 0; r < leds.size(); r++) {
@@ -67,17 +60,19 @@ vector <vector<LedState>> FramesManager::get_states_from_leds(const vector<vecto
 }
 
 void FramesManager::set_active_states() {
-	for (size_t r = 0; r < active_state.size(); r++) {
-		for (size_t c = 0; c < active_state[r].size(); c++) {
-			active_state[r][c] = frame_states[frame_idx][r][c];
+	for (size_t r = 0; r < active_states.size(); r++) {
+		for (size_t c = 0; c < active_states[r].size(); c++) {
+			active_states[r][c] = frame_states[frame_idx][r][c];
 		}
 	}
 }
 
 void FramesManager::set_frame_states() {
-	for (size_t r = 0; r < active_state.size(); r++) {
-		for (size_t c = 0; c < active_state[r].size(); c++) {
-			frame_states[frame_idx][r][c] = active_state[r][c];
+	for (size_t i = 0; i < active_states.size(); i++) {
+		for (size_t r = 0; r < active_states[i].size(); r++) {
+			for (size_t c = 0; c < active_states[i][r].size(); c++) {
+				frame_states[frame_idx][i][r][c] = active_states[i][r][c];
+			}
 		}
 	}
 }
@@ -103,7 +98,7 @@ void FramesManager::update() {
 
 void FramesManager::add_frame() {
 	if (frame_states.size() < 64) {
-		frame_states.push_back(active_state);
+		frame_states.push_back(active_states);
 		frame_idx = frame_states.size() - 1;
 		updated_b = true;
 	}

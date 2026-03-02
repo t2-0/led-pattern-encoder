@@ -1,11 +1,13 @@
 #include "Pattern.h"
 #include <sstream>
 
-array<array<LedState, 8>, 8> get_states_from_leds(const array< array<array <Led, 8>, 8>, 4>& leds) {
-	array<array<LedState, 8>, 8> states;
-	for (size_t r = 0; r < states.size(); r++) {
-		for (size_t c = 0; c < states[r].size(); c++) {
-			states[r][c] = leds[0][r][c].get_state();
+array<array<array<LedState, 8>, 8>, 4> Pattern::get_states_from_leds() {
+	array<array<array<LedState, 8>, 8>, 4> states = {};
+	for (size_t i = 0; i < leds_active_size; i++) {
+		for (size_t r = 0; r < states[i].size(); r++) {
+			for (size_t c = 0; c < states[i][r].size(); c++) {
+				states[i][r][c] = leds[i][r][c].get_state();
+			}
 		}
 	}
 
@@ -85,30 +87,28 @@ void Pattern::draw() {
 }
 
 void Pattern::update() {
+	update_panel_b = leds_updated();
 	bool type_b = old_type != type;
-	update_panel_b = update_panel_b || type_b;
-
-	pair<bool, bool>update_manager_panel = leds_updated();
-	if (update_manager_panel.second) { update_panel_b = true; }
 
 	if (type == PatternType::ANIMATION) {
 		frames_gui.update(frames_manager);
 
-		array<array<LedState, 8>, 8> leds_states = get_states_from_leds(leds);
-		array<array<LedState, 8>, 8> frame_states = frames_manager.get_active_state();
+		array<array<array<LedState, 8>, 8>, 4> leds_states = get_states_from_leds();
+		array<array<array<LedState, 8>, 8>, 4> frame_states = frames_manager.get_active_state();
 
 		// prevent leds overriding manager active states
 		if (type_b) { set_leds_states(frame_states); }
 
 		// if leds state updated -> update active states for manager
 		// otherwise if active manager state updated -> update leds states
-		if (update_manager_panel.first) { frames_manager.set_active_states(leds_states); }
+		if (update_panel_b) { frames_manager.set_active_states(leds_states); }
 		else if (frame_states != leds_states) { set_leds_states(frame_states); }
 
 		update_panel_b = update_panel_b || frames_manager.is_updated();
 		frames_manager.update();
 		frames_manager.update_b();
 	}
+	update_panel_b = update_panel_b || type_b;
 	update_panel_b = update_panel_b || (old_amount != display_amount);
 
 	old_type = type;
@@ -216,41 +216,55 @@ vector<vector<string>> Pattern::convert_hex() {
 	hex_v[0].push_back("= {");
 
 	if (type == PatternType::ANIMATION) {
-		vector<array<array <LedState, 8>, 8>> states = frames_manager.get_frame_states();
+		vector<array<array<array <LedState, 8>, 8>, 4>> states = frames_manager.get_frame_states();
 
-		for (size_t i = 0; i < states.size(); i++) {
-			hex_v.push_back({});
-			stringstream ss;
-			ss << "\t\t\t{ ";
-			for (size_t r = 0; r < states[i].size(); r++) {
-				int bits_idx = 0;
-				int val = 0;
-
-				for (int c = 0; c < 4; c++, bits_idx++) {
-					if (states[i][r][c] == LedState::ON) {
-						val += stoi(bits_v[bits_idx].get_text());
-					}
-				}
-				ss << "0x" << hex << uppercase << val;
-				val = 0;
-
-				for (int c = 4; c < 8; c++, bits_idx++) {
-					if (states[i][r][c] == LedState::ON) {
-						val += stoi(bits_v[bits_idx].get_text());
-					}
-				}
-				ss << hex << uppercase << val << ", ";
+		for (size_t l = 0; l < states.size(); l++) {
+			if (display_amount == DisplayAmount::x4) {
+				hex_v.push_back({});
+				hex_v.back().push_back("\t\t\t{");
 			}
-			hex_v[i + 1].push_back(ss.str());
-			hex_v[i + 1].back().pop_back(); // pop ' '
-			hex_v[i + 1].back().pop_back(); // pop ','
-			hex_v[i + 1].back() += " },";
+
+			for (size_t i = 0; i < leds_active_size; i++) {
+				stringstream ss;
+				hex_v.push_back({});
+				if (display_amount == DisplayAmount::x4) {
+					ss << "\t";
+				}
+				ss << "\t\t\t{ ";
+
+				for (size_t r = 0; r < states[l][i].size(); r++) {
+					int bits_idx = 0;
+					int val = 0;
+
+					for (int c = 0; c < 4; c++, bits_idx++) {
+						if (states[l][i][r][c] == LedState::ON) {
+							val += stoi(bits_v[bits_idx].get_text());
+						}
+					}
+					ss << "0x" << hex << uppercase << val;
+					val = 0;
+
+					for (int c = 4; c < 8; c++, bits_idx++) {
+						if (states[l][i][r][c] == LedState::ON) {
+							val += stoi(bits_v[bits_idx].get_text());
+						}
+					}
+					ss << hex << uppercase << val << ", ";
+				}
+				hex_v.back().push_back(ss.str());
+				hex_v.back().back().pop_back(); // pop ' '
+				hex_v.back().back().pop_back(); // pop ','
+				hex_v.back().back() += " },";
+			}
+
+			if (display_amount == DisplayAmount::x4) {
+				hex_v.back().back().pop_back(); // pop ','
+				hex_v.push_back({});
+				hex_v.back().push_back("\t\t\t},");
+			}
 		}
-		if (hex_v.size() > 1) { hex_v.back().back().pop_back(); } // pop ','
-		hex_v.push_back({});
-		hex_v.back().push_back("};");
-	} // t?
-	else if (display_amount == DisplayAmount::x4) {
+	}
+	else {
 		for (size_t i = 0; i < leds_active_size; i++) {
 			hex_v.push_back({});
 			stringstream ss;
@@ -279,36 +293,10 @@ vector<vector<string>> Pattern::convert_hex() {
 			hex_v[i + 1].back().pop_back(); // pop ','
 			hex_v[i + 1].back() += " },";
 		}
-		if (hex_v.size() > 1) { hex_v.back().back().pop_back(); } // pop ','
-		hex_v.push_back({});
-		hex_v.back().push_back("};");
-
 	}
-	else {
-		for (size_t r = 0; r < leds[0].size(); r++) {
-			stringstream ss;
-			int bits_idx = 0;
-			int val = 0;
-
-			for (int c = 0; c < 4; c++, bits_idx++) {
-				if (leds[0][r][c].get_state() == LedState::ON) {
-					val += stoi(bits_v[bits_idx].get_text());
-				}
-			}
-			ss << "\t\t\t0x" << hex << uppercase << val;
-			val = 0;
-
-			for (int c = 4; c < 8; c++, bits_idx++) {
-				if (leds[0][r][c].get_state() == LedState::ON) {
-					val += stoi(bits_v[bits_idx].get_text());
-				}
-			}
-			ss << hex << uppercase << val << ",";
-			hex_v[0].push_back(ss.str());
-		}
-		hex_v[0].back().pop_back();
-		hex_v[0].push_back("};");
-	}
+	if (hex_v.size() > 1) { hex_v.back().back().pop_back(); } // pop ','
+	hex_v.push_back({});
+	hex_v.back().push_back("};");
 
 	return hex_v;
 }
@@ -435,11 +423,11 @@ void Pattern::mirror_v(size_t i, size_t row, size_t col) {
 	}
 }
 
-void Pattern::set_leds_states(array<array<LedState, 8>, 8> states) {
+void Pattern::set_leds_states(array<array<array<LedState, 8>, 8>, 4> states) {
 	for (size_t i = 0; i < leds_active_size; i++) {
-		for (size_t r = 0; r < states.size(); r++) {
-			for (size_t c = 0; c < states[r].size(); c++) {
-				leds[i][r][c].set_state(states[r][c]);
+		for (size_t r = 0; r < states[i].size(); r++) {
+			for (size_t c = 0; c < states[i][r].size(); c++) {
+				leds[i][r][c].set_state(states[i][r][c]);
 			}
 		}
 	}
@@ -538,21 +526,17 @@ void Pattern::set_amount(DisplayAmount display_amount) {
 	Led::set_radius(radius);
 }
 
-pair<bool, bool> Pattern::leds_updated() {
-	pair<bool, bool> updated_normal_ignored = { false, false };
+bool Pattern::leds_updated() {
 	for (size_t i = 0; i < leds_active_size; i++) {
 		for (size_t r = 0; r < leds[i].size(); r++) {
 			for (size_t c = 0; c < leds[i][r].size(); c++) {
 				if (leds[i][r][c].is_updated()) {
-					updated_normal_ignored.first = true;
-					if (leds[i][r][c].is_updated(LedState::FOCUSED)) {
-						updated_normal_ignored.second = true;
-					}
+					return true;
 				}
 			}
 		}
 	}
-	return updated_normal_ignored;
+	return false;
 }
 
 void Pattern::leds_update() {

@@ -18,7 +18,6 @@ public:
 	void set_color(Color color) { this->color = color; }
 
 	bool is_updated() { return state != old_state; }
-	bool is_updated(LedState to_ignore) { if (state == to_ignore || old_state == to_ignore) return false; return state != old_state; }
 	void update() { old_state = state;  }
 
 	static void set_radius(float r) { radius = r; }

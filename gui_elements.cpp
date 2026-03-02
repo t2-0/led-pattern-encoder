@@ -136,31 +136,19 @@ void CopyPanel::set_elements_text(const vector<vector<string>> &elements_s) {
 			  idx_bounds.y += 19.0f;
 			  idx_bounds.width -= 2.0f;
 			  idx_bounds.height = 19.0f;
-	if (elements_s.size() == 1) {
-		bounds = { bounds.x, bounds.y, 150.0f, 192.0f };
-		container_s.set_text("array<int, 8> ... = ");
 
-		for (size_t i = 0; i < 8; i++) {
-			Vector2 pos = { idx_bounds.x, idx_bounds.y };
-			idx_v.push_back({ { pos }, to_string(i), BLUE });
-			idx_bounds.y += 19.0f;
-		}
+	if (elements_s.size() == 1) {
+		container_s.set_text("array<int, 8> ... = ");
 	}
 	else {
-		bounds = { bounds.x, bounds.y, 350.0f, 192.0f };
 		container_s.set_text("vector<array<int, 8>> ... = ");
+	}
 
-		Rectangle scrollbar_bounds = bounds;
-				  scrollbar_bounds.x += bounds.width + 5;
-				  scrollbar_bounds.width = 10;
-				  scrollbar->set_bounds(scrollbar_bounds);
-
-		for (size_t i = 0; i + 2 < elements_s.size(); i++) {
-			Vector2 pos = { idx_bounds.x, idx_bounds.y };
-			if (i >= 10) { pos.x -= font.baseSize / 2; }
-			idx_v.push_back({ pos, to_string(i), GREEN });
-			idx_bounds.y += 19.0f;
-		}
+	for (size_t i = 0; i + 2 < elements_s.size(); i++) { //i + 2 
+		Vector2 pos = { idx_bounds.x, idx_bounds.y };
+		if (i >= 10) { pos.x -= font.baseSize / 2; }
+		idx_v.push_back({ pos, to_string(i), GREEN });
+		idx_bounds.y += 19.0f;
 	}
 
 	Color element_color = GetColor(GuiGetStyle(DEFAULT, TEXT_COLOR_NORMAL));
