@@ -1,4 +1,5 @@
 #include "Pattern.h"
+#include "CopyPanel.h"
 
 int main() {
 	InitWindow(800, 600, "LED Pattern Encoder");
@@ -12,7 +13,8 @@ int main() {
 	PatternGui pattern_gui;
 	Pattern pattern;
 
-	CopyPanel panel = { { 410.0f, 365.0f, 350.0f, 192.0f }, 0.75f };
+	CopyPanel panel = { { 410.0f, 365.0f, 370.0f, 192.0f }, 0.75f };
+	CopyPanelGui panel_gui = { panel.get_bounds() };
 
 	Color bg_color = GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR));
 
@@ -26,8 +28,14 @@ int main() {
 		pattern.update();
 		pattern_gui.update(pattern);
 
-		if (pattern.update_panel()) { panel.set_elements_text(pattern.convert_hex()); pattern.reset_update_panel(); }
+		if (pattern.update_panel()) {
+			panel.set_elements_text(pattern.convert_hex(), pattern.get_type(), pattern.get_amount());
+			pattern.reset_update_panel(); 
+		}
 		panel.draw();
+
+		panel_gui.draw();
+		panel_gui.update(panel, pattern_gui, pattern);
 
 		EndDrawing();
 	}

@@ -5,6 +5,7 @@
 #include "FramesManager.h"
 #include "enums.h"
 
+#include <bitset>
 #include <vector>
 #include <string>
 #include <iostream>
@@ -24,16 +25,19 @@ public:
 	bool update_panel() { return update_panel_b; }
 
 	void set_state(PatternState state) { this->state = state; }
-	void set_type(PatternType type) { this->type = type; }
+	void set_type(PatternType type) { pattern_type = type; }
 	void set_amount(DisplayAmount amount);
 	void reset_update_panel() { update_panel_b = false; }
 	vector<vector<string>> convert_hex();
 
 	DisplayAmount get_amount() { return display_amount; }
+	PatternType get_type()     { return pattern_type; }
+
+	void set_pattern(const vector<array<bitset<8>, 8>>& elements_valb);
 private:
 	vector<TextEx> bits_v;
 	array<TextEx, 8> idx_h;
-	array< array<array <Led, 8>, 8>, 4> leds;
+	array<array<array <Led, 8>, 8>, 4> leds;
 
 	size_t leds_active_size = 1;
 
@@ -47,7 +51,7 @@ private:
 
 	PatternState state = PatternState::NORMAL;
 
-	PatternType type   = PatternType::DEFAULT;
+	PatternType pattern_type = PatternType::DEFAULT;
 	PatternType old_type = PatternType::ANIMATION;
 
 	DisplayAmount display_amount = DisplayAmount::x1;
@@ -70,6 +74,7 @@ private:
 	bool leds_updated();
 	void leds_update();
 
+	// t
 	void set_leds_states(array<array<array<LedState, 8>, 8>, 4> states);
 	array<array<array<LedState, 8>, 8>, 4> get_states_from_leds();
 };
@@ -78,6 +83,8 @@ class PatternGui {
 public:
 	void draw(DisplayAmount amount);
 	void update(Pattern& pattern);
+
+	void paste_conf(PatternType pattern_type, DisplayAmount display_amount);
 private:
 	Button reset_btn  = { { 50.0f, 370.0f, 100.0f, 30.0f }, "Reset" };
 	Button invert_btn = { { 50.0f, 405.0f, 100.0f, 30.0f }, "Invert" };
@@ -86,5 +93,5 @@ private:
 	Toggle mirror_v_toggle_1x = { { 160.0f, 370.0f, 30.0f, 30.0f }, GuiIconText(ICON_SYMMETRY_VERTICAL, nullptr) };
 
 	Dropdownbox mode_drop = { { 50.0f, 440.0f, 100.0f, 30.0f }, "Default;Animation" };
-	ToggleGroup display_amount = { { 160.0f, 440.0f, 30.0f, 30.0f }, "1x;4x" };
+	ToggleGroup display_amount_tg = { { 160.0f, 440.0f, 30.0f, 30.0f }, "1x;4x" };
 };

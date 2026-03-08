@@ -3,6 +3,8 @@
 #include "gui_elements.h"
 #include "Led.h"
 #include "enums.h"
+
+#include <bitset>
 #include <vector>
 #include <iostream>
 
@@ -34,6 +36,8 @@ public:
 	int get_idx() { return frame_idx; }
 	size_t get_states_size() { return frame_states.size(); }
 	float get_interval() { return interval; }
+
+	void paste_conf(const vector<array<bitset<8>, 8>>& elements_valb, size_t leds_active_size);
 private:
 	vector<array<array<array <LedState, 8>, 8>, 4>> frame_states;
 	array<array<array<LedState, 8>, 8>, 4> active_states = {};

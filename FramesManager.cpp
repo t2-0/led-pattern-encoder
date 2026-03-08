@@ -139,3 +139,24 @@ void FramesManager::play() {
 		set_active_states();
 	}
 }
+
+void FramesManager::paste_conf(const vector<array<bitset<8>, 8>>& elements_valb, size_t leds_active_size) {
+	frame_states.clear();
+	size_t c = 0;
+	for (size_t i = 0; i < elements_valb.size() / leds_active_size; i++) {
+		for (size_t l = 0; l < leds_active_size; l++, c++) {
+			if (frame_states.size() < 64) {
+				for (size_t r = 0; r < elements_valb[i].size(); r++) {
+					for (size_t b = 0; b < elements_valb[i][r].size(); b++) {
+						int b_r = elements_valb[c][r].size() - b - 1;
+						if (elements_valb[c][r][b]) { active_states[l][r][b_r] = LedState::ON; }
+						else { active_states[l][r][b_r] = LedState::OFF; }
+					}
+				}
+			}
+		}
+		frame_states.push_back(active_states);
+	}
+
+	frame_idx = frame_states.size() - 1;
+}

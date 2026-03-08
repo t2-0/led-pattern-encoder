@@ -22,7 +22,7 @@ void PatternGui::draw(DisplayAmount amount) {
 	mirror_v_toggle_1x.draw();
 
 	mode_drop.draw();
-	display_amount.draw();
+	display_amount_tg.draw();
 }
 
 void PatternGui::update(Pattern& pattern) {
@@ -42,8 +42,16 @@ void PatternGui::update(Pattern& pattern) {
 	if (mode_drop.get_active() == 1) { pattern_type = PatternType::ANIMATION; }
 	pattern.set_type(pattern_type);
 
-	DisplayAmount display_a = static_cast<DisplayAmount>(display_amount.get_active());
-	if (display_amount.is_updated()) { pattern.set_amount(display_a); display_amount.update(); }
+	DisplayAmount display_a = static_cast<DisplayAmount>(display_amount_tg.get_active());
+	if (display_amount_tg.is_updated()) { pattern.set_amount(display_a); display_amount_tg.update(); }
+}
+
+void PatternGui::paste_conf(PatternType pattern_type, DisplayAmount display_amount) {
+	int pattern_active = static_cast<int>(pattern_type);
+	mode_drop.set_active(pattern_active);
+
+	int display_active = static_cast<int>(display_amount);
+	display_amount_tg.set_active(display_active);
 }
 
 Pattern::Pattern() {
@@ -78,7 +86,7 @@ Pattern::Pattern() {
 }
 
 void Pattern::draw() {
-	if(type == PatternType::ANIMATION) { frames_gui.draw(); }
+	if(pattern_type == PatternType::ANIMATION) { frames_gui.draw(); }
 	for(size_t i = 0; i < idx_h.size(); i++) { idx_h[i].draw(); }
 	for(size_t i = 0; i < bits_v.size(); i++) { bits_v[i].draw(); }
 
@@ -88,9 +96,9 @@ void Pattern::draw() {
 
 void Pattern::update() {
 	update_panel_b = leds_updated();
-	bool type_b = old_type != type;
+	bool type_b = old_type != pattern_type;
 
-	if (type == PatternType::ANIMATION) {
+	if (pattern_type == PatternType::ANIMATION) {
 		frames_gui.update(frames_manager);
 
 		array<array<array<LedState, 8>, 8>, 4> leds_states = get_states_from_leds();
@@ -111,7 +119,7 @@ void Pattern::update() {
 	update_panel_b = update_panel_b || type_b;
 	update_panel_b = update_panel_b || (old_amount != display_amount);
 
-	old_type = type;
+	old_type = pattern_type;
 	old_amount = display_amount;
 	leds_update();
 }
@@ -215,7 +223,7 @@ vector<vector<string>> Pattern::convert_hex() {
 	hex_v.push_back({});
 	hex_v[0].push_back("= {");
 
-	if (type == PatternType::ANIMATION) {
+	if (pattern_type == PatternType::ANIMATION) {
 		vector<array<array<array <LedState, 8>, 8>, 4>> states = frames_manager.get_frame_states();
 
 		for (size_t l = 0; l < states.size(); l++) {
@@ -547,4 +555,27 @@ void Pattern::leds_update() {
 			}
 		}
 	}
+}
+
+void Pattern::set_pattern(const vector<array<bitset<8>, 8>>& elements_valb) {
+	cout << elements_valb.size() << " - " << elements_valb[0].size() << " - " << elements_valb[0][0].size() << endl;
+	if (pattern_type == PatternType::ANIMATION) {
+		cout << "pattern type: Animation\n";
+		frames_manager.paste_conf(elements_valb, leds_active_size);
+	}
+	else {
+		for (size_t i = 0; i < elements_valb.size(); i++) {
+			for (size_t r = 0; r < elements_valb[i].size(); r++) {
+				for (size_t b = 0; b < elements_valb[i][r].size(); b++) {
+					int b_r = elements_valb[i][r].size() - b - 1;
+					if (elements_valb[i][r][b]) { leds[i][r][b_r].set_state(LedState::ON); }
+					else { leds[i][r][b_r].set_state(LedState::OFF); }
+				}
+			}
+		}
+	}
+
+	
+	leds_update();
+
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "raylib_raygui.h"
+#include "enums.h"
 #include <string>
 #include <vector>
 #include <array>
@@ -31,6 +32,7 @@ public:
 	void draw() {if (GuiDropdownBox(bounds, text.c_str(), &active, edit_mode)) { edit_mode = !edit_mode; } }
 
 	int get_active() { return active; }
+	void set_active(int i) { active = i; }
 
 	bool is_updated() { return active != old_active; }
 	void update() { old_active = active; }
@@ -89,6 +91,7 @@ public:
 	void update() { active_old = active; }
 
 	int get_active() { return active; }
+	void set_active(int i) { active = i; }
 private:
 	Rectangle bounds;
 	string text;
@@ -128,7 +131,7 @@ public:
 	void set_pos(Vector2 pos)   { this->pos = pos; }
 	void set_color(Color color) { this->color = color; }
 
-	string get_text() { return text; }
+	string get_text() const{ return text; }
 	Vector2 get_pos() { return pos; }
 
 	friend ostream& operator<<(ostream& os, const TextEx& t);
@@ -160,32 +163,4 @@ private:
 	float min_scroll;
 	float max_scroll;
 	float scroll_val;
-};
-
-class CopyPanel {
-public:
-	CopyPanel(Rectangle bounds, float color_factor);
-
-	void draw();
-
-	void set_elements_text(const vector<vector<string>>& elements_s);
-
-	string format_elements();
-private:
-	Rectangle bounds;
-	ScrollBar* scrollbar = nullptr;
-
-	Color color;
-	Color line_color;
-	vector<array<TextEx, 10>> elements;
-	vector<TextEx> idx_v;
-
-	TextEx container_s;
-
-	Button* copy_btn = nullptr;
-
-	float color_factor = 1.0f;
-
-	Font font = GuiGetFont();
-	int y_offset = 1;
 };

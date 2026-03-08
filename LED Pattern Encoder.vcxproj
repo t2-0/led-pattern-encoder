@@ -137,6 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CopyPanel.cpp" />
     <ClCompile Include="FramesManager.cpp" />
     <ClCompile Include="gui_elements.cpp" />
     <ClCompile Include="Led.cpp" />
@@ -145,6 +146,7 @@
     <ClCompile Include="raylib_raygui.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CopyPanel.h" />
     <ClInclude Include="enums.h" />
     <ClInclude Include="FramesManager.h" />
     <ClInclude Include="gui_elements.h" />
