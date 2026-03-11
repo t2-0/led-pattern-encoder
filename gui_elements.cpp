@@ -29,23 +29,22 @@ void IntBox::draw() {
 	}
 }
 
-TextEx::TextEx(Vector2 pos, string text, Color color) {
-	this->text = text;
-	this->pos = pos;
-	this->color = color;
-}
-
 void TextEx::init_font() {
 	TextEx::font = GuiGetFont();
 }
 
-void TextEx::draw() {
-	DrawTextEx(font, text.c_str(), pos, font.baseSize, 0.0f, color);
-}
+void TimedText::draw() {
+	if (triggered) {
+		float delta_time = GetFrameTime();
+		timer += delta_time;
 
-ostream& operator<<(ostream& os, const TextEx& t) {
-	os << t.text;
-	return os;
+		if (timer >= lifetime) {
+			timer = 0.0f;
+			triggered = false;
+		}
+
+		text.draw();
+	}
 }
 
 ScrollBar::ScrollBar(Rectangle bounds, float min_scroll, float font_size, size_t item_count) {

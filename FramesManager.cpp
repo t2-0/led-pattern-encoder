@@ -106,16 +106,14 @@ void FramesManager::add_frame() {
 
 void FramesManager::del_frame() {
 	if (!frame_states.empty()) { frame_states.pop_back(); }
-	if (frame_idx >= frame_states.size()) {
-		if (frame_states.empty()) {
-			frame_idx = -1;
-		}
-		else {
-			frame_idx = frame_states.size() - 1;
-			set_active_states();
-		}
-		updated_b = true;
+	if (frame_states.empty()) {
+		frame_idx = -1;
 	}
+	else {
+		frame_idx = frame_states.size() - 1;
+		set_active_states();
+	}
+	updated_b = true;
 }
 
 void FramesManager::frame_back() {
@@ -157,6 +155,5 @@ void FramesManager::paste_conf(const vector<array<bitset<8>, 8>>& elements_valb,
 		}
 		frame_states.push_back(active_states);
 	}
-
 	frame_idx = frame_states.size() - 1;
 }

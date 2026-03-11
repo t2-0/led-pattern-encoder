@@ -3,15 +3,16 @@
 #include "gui_elements.h"
 #include "Pattern.h"
 
-class CopyPanel {
+class Panel {
 public:
-	CopyPanel(Rectangle bounds, float color_factor);
+	Panel(Rectangle bounds, float color_factor);
 
 	void draw();
 	void set_elements_text(const vector<vector<string>>& elements_s, PatternType pattern_type, DisplayAmount display_amount);
-	void paste_elements(PatternGui& pattern_gui, Pattern& pattern);
-
-	string format_elements() const;
+	void copy();
+	void paste_elements(const char* txt, PatternGui& pattern_gui, Pattern& pattern);
+	void save_elements();
+	void load_elements(PatternGui& pattern_gui, Pattern& pattern);
 
 	Rectangle get_bounds() { return bounds; }
 private:
@@ -24,19 +25,21 @@ private:
 	vector<TextEx> idx_v;
 
 	TextEx container_s;
+	TimedText invalid_in;
 
 	float color_factor = 1.0f;
 
 	Font font = GuiGetFont();
-	int y_offset = 1;
 	bool bad_paste = false;
+
+	string format_elements() const;
 };
 
-class CopyPanelGui {
+class PanelGui {
 public:
-	CopyPanelGui(Rectangle panel_bounds);
+	PanelGui(Rectangle panel_bounds);
 	void draw();
-	void update(CopyPanel& panel, PatternGui& pattern_gui, Pattern& pattern);
+	void update(Panel& panel, PatternGui& pattern_gui, Pattern& pattern);
 private:
 	Button* copy_btn = nullptr;
 	Button* paste_btn = nullptr;

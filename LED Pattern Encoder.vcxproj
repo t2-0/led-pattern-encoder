@@ -137,22 +137,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CopyPanel.cpp" />
+    <ClCompile Include="Panel.cpp" />
     <ClCompile Include="FramesManager.cpp" />
     <ClCompile Include="gui_elements.cpp" />
     <ClCompile Include="Led.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Pattern.cpp" />
     <ClCompile Include="raylib_raygui.cpp" />
+    <ClCompile Include="win32_dialog.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CopyPanel.h" />
+    <ClInclude Include="Panel.h" />
     <ClInclude Include="enums.h" />
     <ClInclude Include="FramesManager.h" />
     <ClInclude Include="gui_elements.h" />
     <ClInclude Include="Led.h" />
     <ClInclude Include="Pattern.h" />
     <ClInclude Include="raylib_raygui.h" />
+    <ClInclude Include="win32_dialog.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

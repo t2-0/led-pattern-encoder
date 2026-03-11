@@ -123,18 +123,17 @@ private:
 class TextEx {
 public:
 	TextEx() { color = RAYWHITE; pos = { 0.0f, 0.0f }; }
-	TextEx(Vector2 pos, string text, Color color);
+	TextEx(Vector2 pos, string text, Color color) : pos{ pos }, text{ text }, color{ color } { }
 
-	void draw();
+	void draw() { DrawTextEx(font, text.c_str(), pos, font.baseSize, 0.0f, color); }
+	void draw(float offset_y) { DrawTextEx(font, text.c_str(), { pos.x, pos.y + offset_y }, font.baseSize, 0.0f, color); }
 
 	void set_text(string text)  { this->text = text; }
 	void set_pos(Vector2 pos)   { this->pos = pos; }
 	void set_color(Color color) { this->color = color; }
 
-	string get_text() const{ return text; }
+	string get_text() const { return text; }
 	Vector2 get_pos() { return pos; }
-
-	friend ostream& operator<<(ostream& os, const TextEx& t);
 
 	static void init_font();
 private:
@@ -143,6 +142,23 @@ private:
 
 	static Font font;
 	Color color;
+};
+
+class TimedText {
+public:
+	TimedText() { lifetime = 2; }
+
+	void draw();
+	void trigger() { triggered = true; }
+
+	void set_text(TextEx text) { this->text = text; }
+	void set_lifetime(float lifetime) { this->lifetime = lifetime; }
+private:
+	TextEx text;
+
+	float lifetime = 0;
+	float timer = 0;
+	bool triggered = false;
 };
 
 class ScrollBar {

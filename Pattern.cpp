@@ -163,12 +163,8 @@ void Pattern::draw_leds() {
 							mirror_v(i, r, c);
 						break;
 					case PatternState::MIRROR_HV: 
-						if (display_amount == DisplayAmount::x1) { 
-							mirror_hv(i, r, c);
-						}
-						else {
-							mirror_hv_4x(i, r, c);
-						}
+						if (display_amount == DisplayAmount::x1) { mirror_hv(i, r, c); }
+						else { mirror_hv_4x(i, r, c); }
 						break;
 				}
 			}
@@ -558,9 +554,7 @@ void Pattern::leds_update() {
 }
 
 void Pattern::set_pattern(const vector<array<bitset<8>, 8>>& elements_valb) {
-	cout << elements_valb.size() << " - " << elements_valb[0].size() << " - " << elements_valb[0][0].size() << endl;
 	if (pattern_type == PatternType::ANIMATION) {
-		cout << "pattern type: Animation\n";
 		frames_manager.paste_conf(elements_valb, leds_active_size);
 	}
 	else {
@@ -574,8 +568,6 @@ void Pattern::set_pattern(const vector<array<bitset<8>, 8>>& elements_valb) {
 			}
 		}
 	}
-
 	
 	leds_update();
-
 }
