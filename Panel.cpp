@@ -276,7 +276,7 @@ void Panel::paste_elements(const char* txt, PatternGui& pattern_gui, Pattern& pa
 	pattern.set_type(pattern_type);
 	pattern.set_amount(display_amount);
 	pattern.set_pattern(elements_valb);
-
+	
 	set_elements_text(elements_s, pattern_type, display_amount);
 }
 

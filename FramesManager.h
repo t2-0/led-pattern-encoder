@@ -12,7 +12,7 @@ using namespace std;
 
 class FramesManager {
 public:
-	void update();
+	void play_loop();
 
 	void add_frame();
 	void del_frame();
@@ -25,13 +25,18 @@ public:
 	void repeat() { repeat_b = true; }
 
 	void set_interval(float interval) { this->interval = interval; }
-	void set_active_states(array<array<array<LedState, 8>, 8>, 4>active_states) { this->active_states = active_states; }
+	void set_active_states(array<array<array<LedState, 8>, 8>, 4> active_states) { 
+		this->active_states = active_states; 
+		if (frame_idx != -1) {
+			set_frame_states();
+		}
+	}
 
 	vector<array<array<array <LedState, 8>, 8>, 4>> get_frame_states() { return frame_states; }
-	array<array<array<LedState, 8>, 8>, 4> get_active_state() { return active_states; }
+	array<array<array<LedState, 8>, 8>, 4> get_active_states() { return active_states; }
 
 	bool is_updated() { return updated_b; }
-	void update_b() { updated_b = false; }
+	void update() { updated_b = false; }
 
 	int get_idx() { return frame_idx; }
 	size_t get_states_size() { return frame_states.size(); }

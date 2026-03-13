@@ -65,6 +65,7 @@ void FramesManager::set_active_states() {
 			active_states[r][c] = frame_states[frame_idx][r][c];
 		}
 	}
+	updated_b = true;
 }
 
 void FramesManager::set_frame_states() {
@@ -75,9 +76,10 @@ void FramesManager::set_frame_states() {
 			}
 		}
 	}
+	updated_b = true;
 }
 
-void FramesManager::update() {
+void FramesManager::play_loop() {
 	if (play_b) {
 		float delta_time = GetFrameTime();
 		timer += delta_time;
@@ -92,8 +94,6 @@ void FramesManager::update() {
 			timer = 0.0f;
 		}
 	}
-
-	if (frame_idx >= 0 && !frame_states.empty() && !play_b) { set_frame_states(); }
 }
 
 void FramesManager::add_frame() {
@@ -105,13 +105,12 @@ void FramesManager::add_frame() {
 }
 
 void FramesManager::del_frame() {
-	if (!frame_states.empty()) { frame_states.pop_back(); }
-	if (frame_states.empty()) {
-		frame_idx = -1;
+	if (!frame_states.empty()) { 
+		frame_states.pop_back();
+		frame_back();
 	}
 	else {
-		frame_idx = frame_states.size() - 1;
-		set_active_states();
+		frame_idx = -1;
 	}
 	updated_b = true;
 }

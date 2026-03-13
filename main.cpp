@@ -23,12 +23,13 @@ int main() {
 		ClearBackground(bg_color);
 
 		pattern.draw();
-		pattern_gui.draw(pattern.get_amount());
+		pattern_gui.draw();
 		
 		pattern.update();
 		pattern_gui.update(pattern);
 
 		if (pattern.update_panel()) {
+			cout << "update panel\n";
 			panel.set_elements_text(pattern.convert_hex(), pattern.get_type(), pattern.get_amount());
 			pattern.reset_update_panel(); 
 		}

@@ -14,7 +14,7 @@ array<array<array<LedState, 8>, 8>, 4> Pattern::get_states_from_leds() {
 	return states;
 }
 
-void PatternGui::draw(DisplayAmount amount) {
+void PatternGui::draw() {
 	reset_btn.draw();
 	invert_btn.draw();
 
@@ -38,9 +38,12 @@ void PatternGui::update(Pattern& pattern) {
 	if (draw_h && draw_v) { pattern_state = PatternState::MIRROR_HV; }
 	pattern.set_state(pattern_state);
 
-	PatternType pattern_type = PatternType::DEFAULT;
-	if (mode_drop.get_active() == 1) { pattern_type = PatternType::ANIMATION; }
-	pattern.set_type(pattern_type);
+	if (mode_drop.is_updated()) {
+		PatternType pattern_type = PatternType::DEFAULT;
+		if (mode_drop.get_active() == 1) { pattern_type = PatternType::ANIMATION; }
+		pattern.set_type(pattern_type);
+		mode_drop.update();
+	}
 
 	DisplayAmount display_a = static_cast<DisplayAmount>(display_amount_tg.get_active());
 	if (display_amount_tg.is_updated()) { pattern.set_amount(display_a); display_amount_tg.update(); }
@@ -95,33 +98,35 @@ void Pattern::draw() {
 }
 
 void Pattern::update() {
-	update_panel_b = leds_updated();
+	bool are_leds_updated = leds_updated();
+	update_panel_b = are_leds_updated;
 	bool type_b = old_type != pattern_type;
 
 	if (pattern_type == PatternType::ANIMATION) {
 		frames_gui.update(frames_manager);
 
-		array<array<array<LedState, 8>, 8>, 4> leds_states = get_states_from_leds();
-		array<array<array<LedState, 8>, 8>, 4> frame_states = frames_manager.get_active_state();
-
-		// prevent leds overriding manager active states
-		if (type_b) { set_leds_states(frame_states); }
-
-		// if leds state updated -> update active states for manager
-		// otherwise if active manager state updated -> update leds states
-		if (update_panel_b) { frames_manager.set_active_states(leds_states); }
-		else if (frame_states != leds_states) { set_leds_states(frame_states); }
+		if (are_leds_updated) {
+			array<array<array<LedState, 8>, 8>, 4> leds_states = get_states_from_leds();
+			frames_manager.set_active_states(leds_states);
+		}
 
 		update_panel_b = update_panel_b || frames_manager.is_updated();
-		frames_manager.update();
-		frames_manager.update_b();
+
+		if (frames_manager.is_updated()) {
+			array<array<array<LedState, 8>, 8>, 4> frame_states = frames_manager.get_active_states();
+			set_leds_states(frame_states);
+			frames_manager.update();
+		}
+
+		frames_manager.play_loop();
 	}
+
 	update_panel_b = update_panel_b || type_b;
 	update_panel_b = update_panel_b || (old_amount != display_amount);
 
 	old_type = pattern_type;
 	old_amount = display_amount;
-	leds_update();
+	if (are_leds_updated) { leds_update(); }
 }
 
 void Pattern::reset() {
@@ -155,7 +160,7 @@ void Pattern::draw_leds() {
 			for (size_t c = 0; c < leds[i][r].size(); c++) {
 				leds[i][r][c].draw();
 
-				switch (state) {
+				switch (pattern_state) {
 					case PatternState::MIRROR_H: 
 							mirror_h(i, r, c);
 						break;
@@ -173,7 +178,7 @@ void Pattern::draw_leds() {
 }
 
 void Pattern::draw_lines() {
-	switch (state) {
+	switch (pattern_state) {
 	case PatternState::MIRROR_H:
 		line_h.draw();
 		break;
@@ -470,6 +475,21 @@ void Pattern::set_amount(DisplayAmount display_amount) {
 		y_pos += offset * 8 - radius / 2;
 		pos_end = { x_pos, y_pos };
 		line_h = { pos_start, pos_end, 1.0f, RAYWHITE };
+
+		if (pattern_type == PatternType::DEFAULT) {
+			for (size_t r = 0; r < leds[0].size(); r++) {
+				for (size_t c = 0; c < leds[0][r].size(); c++) {
+					leds[0][r][c].set_state(led_states.default_1x[r][c]);
+				}
+			}
+		}
+		else {
+			for (size_t r = 0; r < leds[0].size(); r++) {
+				for (size_t c = 0; c < leds[0][r].size(); c++) {
+					leds[0][r][c].set_state(led_states.animation_1x[r][c]);
+				}
+			}
+		}
 	}
 	else {
 		leds_active_size = 4;
@@ -504,6 +524,26 @@ void Pattern::set_amount(DisplayAmount display_amount) {
 		pos_end = { x_pos, y_pos };
 
 		line_v = { pos_start, pos_end, 1.0f, RAYWHITE };
+
+		if (pattern_type == PatternType::DEFAULT) {
+			for (size_t i = 0; i < leds_active_size; i++) {
+				for (size_t r = 0; r < leds[i].size(); r++) {
+					for (size_t c = 0; c < leds[i][r].size(); c++) {
+						leds[i][r][c].set_state(led_states.default_4x[i][r][c]);
+					}
+				}
+			}
+		}
+		else {
+			for (size_t i = 0; i < leds_active_size; i++) {
+				for (size_t r = 0; r < leds[i].size(); r++) {
+					for (size_t c = 0; c < leds[i][r].size(); c++) {
+						leds[i][r][c].set_state(led_states.animation_4x[i][r][c]);
+					}
+				}
+			}
+
+		}
 	}
 
 	Vector2 led_pos = base_pos;
@@ -518,8 +558,8 @@ void Pattern::set_amount(DisplayAmount display_amount) {
 
 	for (size_t r = 0; r < leds[0].size(); r++) {
 		Vector2 pos = leds[0][r][0].get_pos();
-		pos.x -= x_idx_offset;
-		pos.y -= 7.0f;
+				pos.x -= x_idx_offset;
+				pos.y -= 7.0f;
 
 		idx_h[r].set_pos(pos);
 	}
@@ -534,7 +574,7 @@ bool Pattern::leds_updated() {
 	for (size_t i = 0; i < leds_active_size; i++) {
 		for (size_t r = 0; r < leds[i].size(); r++) {
 			for (size_t c = 0; c < leds[i][r].size(); c++) {
-				if (leds[i][r][c].is_updated()) {
+				if (leds[i][r][c].is_updated(LedState::FOCUSED)) {
 					return true;
 				}
 			}
@@ -547,7 +587,49 @@ void Pattern::leds_update() {
 	for (size_t i = 0; i < leds_active_size; i++) {
 		for (size_t r = 0; r < leds[i].size(); r++) {
 			for (size_t c = 0; c < leds[i][r].size(); c++) {
+				if (pattern_type == PatternType::DEFAULT) {
+					if (display_amount == DisplayAmount::x1) {
+						led_states.default_1x[r][c] = leds[i][r][c].get_state();
+					}
+					else {
+						led_states.default_4x[i][r][c] = leds[i][r][c].get_state();
+					}
+				}
+				else {
+					if (display_amount == DisplayAmount::x1) {
+						led_states.animation_1x[r][c] = leds[i][r][c].get_state();
+					}
+					else {
+						led_states.animation_4x[i][r][c] = leds[i][r][c].get_state();
+					}
+				}
 				leds[i][r][c].update();
+			}
+		}
+	}
+}
+
+void Pattern::set_type(PatternType type) {
+	pattern_type = type;
+	for (size_t i = 0; i < leds_active_size; i++) {
+		for (size_t r = 0; r < leds[i].size(); r++) {
+			for (size_t c = 0; c < leds[i][r].size(); c++) {
+				if (pattern_type == PatternType::DEFAULT) {
+					if (display_amount == DisplayAmount::x1) {
+						leds[i][r][c].set_state(led_states.default_1x[r][c]);
+					}
+					else {
+						leds[i][r][c].set_state(led_states.default_4x[i][r][c]);
+					}
+				}
+				else {
+					if (display_amount == DisplayAmount::x1) {
+						leds[i][r][c].set_state(led_states.animation_1x[r][c]);
+					}
+					else {
+						leds[i][r][c].set_state(led_states.animation_4x[i][r][c]);
+					}
+				}
 			}
 		}
 	}
@@ -556,6 +638,8 @@ void Pattern::leds_update() {
 void Pattern::set_pattern(const vector<array<bitset<8>, 8>>& elements_valb) {
 	if (pattern_type == PatternType::ANIMATION) {
 		frames_manager.paste_conf(elements_valb, leds_active_size);
+		array<array<array<LedState, 8>, 8>, 4> frame_states = frames_manager.get_active_states();
+		set_leds_states(frame_states);
 	}
 	else {
 		for (size_t i = 0; i < elements_valb.size(); i++) {
@@ -568,6 +652,4 @@ void Pattern::set_pattern(const vector<array<bitset<8>, 8>>& elements_valb) {
 			}
 		}
 	}
-	
-	leds_update();
 }

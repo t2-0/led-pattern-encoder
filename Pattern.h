@@ -12,6 +12,14 @@
 
 using namespace std;
 
+struct ActiveLedStates {
+	array<array <LedState, 8>, 8> default_1x = {};
+	array<array<array <LedState, 8>, 8>, 4> default_4x = {};
+
+	array<array <LedState, 8>, 8> animation_1x = {};
+	array<array<array <LedState, 8>, 8>, 4> animation_4x = {};
+};
+
 class Pattern {
 public:
 	Pattern();
@@ -24,8 +32,6 @@ public:
 
 	bool update_panel() { return update_panel_b; }
 
-	void set_state(PatternState state) { this->state = state; }
-	void set_type(PatternType type) { pattern_type = type; }
 	void set_amount(DisplayAmount amount);
 	void reset_update_panel() { update_panel_b = false; }
 	vector<vector<string>> convert_hex();
@@ -33,11 +39,14 @@ public:
 	DisplayAmount get_amount() { return display_amount; }
 	PatternType get_type()     { return pattern_type; }
 
+	void set_state(PatternState state) { pattern_state = state; }
+	void set_type(PatternType type);
 	void set_pattern(const vector<array<bitset<8>, 8>>& elements_valb);
 private:
 	vector<TextEx> bits_v;
 	array<TextEx, 8> idx_h;
 	array<array<array <Led, 8>, 8>, 4> leds;
+	ActiveLedStates led_states;
 
 	size_t leds_active_size = 1;
 
@@ -49,7 +58,7 @@ private:
 	Line line_h;
 	Line line_v;
 
-	PatternState state = PatternState::NORMAL;
+	PatternState pattern_state = PatternState::NORMAL;
 
 	PatternType pattern_type = PatternType::DEFAULT;
 	PatternType old_type = PatternType::ANIMATION;
@@ -63,7 +72,6 @@ private:
 	void draw_leds();
 	void draw_lines();
 
-	// force states to set ON on mirroed sides
 	void mirror_h(size_t i, size_t row, size_t col);
 
 	void mirror_hv(size_t i, size_t row, size_t col);
@@ -74,14 +82,13 @@ private:
 	bool leds_updated();
 	void leds_update();
 
-	// t
 	void set_leds_states(array<array<array<LedState, 8>, 8>, 4> states);
 	array<array<array<LedState, 8>, 8>, 4> get_states_from_leds();
 };
 
 class PatternGui {
 public:
-	void draw(DisplayAmount amount);
+	void draw();
 	void update(Pattern& pattern);
 
 	void paste_conf(PatternType pattern_type, DisplayAmount display_amount);
