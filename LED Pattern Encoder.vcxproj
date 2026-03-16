@@ -154,6 +154,7 @@
     <ClInclude Include="Led.h" />
     <ClInclude Include="Pattern.h" />
     <ClInclude Include="raylib_raygui.h" />
+    <ClInclude Include="using_templates.h" />
     <ClInclude Include="win32_dialog.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

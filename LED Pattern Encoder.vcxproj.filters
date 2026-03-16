@@ -65,5 +65,8 @@
     <ClInclude Include="win32_dialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="using_templates.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -3,6 +3,7 @@
 #include "gui_elements.h"
 #include "Led.h"
 #include "enums.h"
+#include "using_templates.h"
 
 #include <bitset>
 #include <vector>
@@ -25,15 +26,15 @@ public:
 	void repeat() { repeat_b = true; }
 
 	void set_interval(float interval) { this->interval = interval; }
-	void set_active_states(array<array<array<LedState, 8>, 8>, 4> active_states) { 
+	void set_active_states(DisplayStates<4> active_states) {
 		this->active_states = active_states; 
 		if (frame_idx != -1) {
 			set_frame_states();
 		}
 	}
 
-	vector<array<array<array <LedState, 8>, 8>, 4>> get_frame_states() { return frame_states; }
-	array<array<array<LedState, 8>, 8>, 4> get_active_states() { return active_states; }
+	vector<DisplayStates<4>> get_frame_states() { return frame_states; }
+	DisplayStates<4> get_active_states() { return active_states; }
 
 	bool is_updated() { return updated_b; }
 	void update() { updated_b = false; }
@@ -44,8 +45,9 @@ public:
 
 	void paste_conf(const vector<array<bitset<8>, 8>>& elements_valb, size_t leds_active_size);
 private:
-	vector<array<array<array <LedState, 8>, 8>, 4>> frame_states;
-	array<array<array<LedState, 8>, 8>, 4> active_states = {};
+	vector<DisplayStates<4>> frame_states = {};
+	DisplayStates<4> active_states = {};
+
 	int frame_idx = -1;
 
 	float timer = 0.0f;
