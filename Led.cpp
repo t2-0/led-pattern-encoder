@@ -4,7 +4,7 @@ Color Led::line_color = RAYWHITE;
 float Led::radius = 15.0f;
 
 void Led::draw() {
-	if (!forced_state) {
+	if (!state_locked) {
 		Vector2 mouse_pos = GetMousePosition();
 
 		if (CheckCollisionPointCircle(mouse_pos, center, radius)) {

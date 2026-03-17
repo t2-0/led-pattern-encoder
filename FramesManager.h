@@ -7,10 +7,22 @@
 
 #include <bitset>
 #include <vector>
-#include <iostream>
 
-using namespace std;
+using std::bitset;
+using std::vector;
+using std::to_string;
 
+// Manages animation frames for LED displays.
+//
+// Responsibilities:
+// - Store sequence of frames (frame_states)
+// - Control playback (play, stop, repeat, timing)
+// - Maintain current editable/displayed state (active_states)
+// - Synchronize active state with selected frame
+//
+// Concept:
+// - frame_states: persistent animation data
+// - frame_idx: currently selected frame (-1 = none)
 class FramesManager {
 public:
 	void play_loop();

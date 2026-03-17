@@ -3,6 +3,16 @@
 #include "gui_elements.h"
 #include "Pattern.h"
 
+// Displays and manages a textual (hexadecimal) representation of the LED pattern.
+//
+// Responsibilities:
+// - Render pattern data as hexadecimal values
+// - Allow copying/pasting pattern data (text format)
+// - Load/save pattern data from/to external sources
+//
+// Interaction:
+// - Receives data from Pattern (via set_elements_text)
+// - Sends modified data back to Pattern (via paste/load)
 class Panel {
 public:
 	Panel(Rectangle bounds, float color_factor);
@@ -17,10 +27,16 @@ public:
 	Rectangle get_bounds() { return bounds; }
 private:
 	Rectangle bounds;
-	ScrollBar* scrollbar = nullptr;
+	ScrollBar scrollbar;
 
 	Color color;
 	Color line_color;
+	// Text representation of pattern rows in hex format:
+	// { value0, value1, ..., value7 }
+	// Each row consists of:
+	// - 1 opening brace '{'
+	// - 8 hex values (from Pattern)
+	// - 1 closing brace '}'
 	vector<array<TextEx, 10>> elements;
 	vector<TextEx> idx_v;
 
@@ -30,7 +46,7 @@ private:
 	float color_factor = 1.0f;
 
 	Font font = GuiGetFont();
-	bool bad_paste = false;
+	bool invalid_paste = false;
 
 	string format_elements() const;
 };
@@ -41,9 +57,9 @@ public:
 	void draw();
 	void update(Panel& panel, PatternGui& pattern_gui, Pattern& pattern);
 private:
-	Button* copy_btn = nullptr;
-	Button* paste_btn = nullptr;
+	Button copy_btn;
+	Button paste_btn;
 
-	Button* load_btn = nullptr;
-	Button* save_btn = nullptr;
+	Button load_btn;
+	Button save_btn;
 };

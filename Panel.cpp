@@ -1,12 +1,15 @@
 #include "Panel.h"
 #include "win32_dialog.h"
 
-#include <iostream>
-#include <bitset>
 #include <charconv>
 #include <sstream>
 
-using namespace std;
+using std::stringstream;
+using std::string_view;
+using std::streampos;
+using std::from_chars_result;
+using std::from_chars;
+using std::errc;
 
 Panel::Panel(Rectangle bounds, float color_factor) {
 	this->bounds = bounds;
@@ -21,7 +24,7 @@ Panel::Panel(Rectangle bounds, float color_factor) {
 	scrollbar_bounds.width = 10;
 
 	float font_size = GuiGetFont().baseSize;
-	scrollbar = new ScrollBar{ scrollbar_bounds, 0, font_size, elements.size() };
+	scrollbar = ScrollBar{ scrollbar_bounds, 0, font_size, elements.size() };
 
 	Vector2 container_pos = { bounds.x, bounds.y - 20.0f };
 	container_s.set_pos(container_pos);
@@ -41,15 +44,15 @@ void Panel::draw() {
 
 	BeginScissorMode(bounds.x - 20, bounds.y, bounds.width + 20, bounds.height);
 
-	for (size_t i = 0; i < idx_v.size(); i++) { idx_v[i].draw(-scrollbar->get_scroll_val()); }
+	for (size_t i = 0; i < idx_v.size(); i++) { idx_v[i].draw(-scrollbar.get_scroll_val()); }
 	for (size_t r = 0; r < elements.size(); r++) {
 		for (size_t c = 0; c < elements[r].size(); c++) {
-			elements[r][c].draw(-scrollbar->get_scroll_val());
+			elements[r][c].draw(-scrollbar.get_scroll_val());
 		}
 	}
 	EndScissorMode();
 
-	scrollbar->draw();
+	scrollbar.draw();
 	container_s.draw(); 
 	invalid_in.draw();
 }
@@ -118,8 +121,8 @@ void Panel::set_elements_text(const vector<vector<string>>& elements_s, PatternT
 
 	float scrollbar_max = elements.size() * font.baseSize - bounds.height;
 	if (scrollbar_max < 0) { scrollbar_max = 0; }
-	if (scrollbar_max != scrollbar->get_max_scroll()) {
-		scrollbar->set_max_scroll(scrollbar_max);
+	if (scrollbar_max != scrollbar.get_max_scroll()) {
+		scrollbar.set_max_scroll(scrollbar_max);
 	}
 }
 
@@ -299,7 +302,7 @@ void Panel::load_elements(PatternGui& pattern_gui, Pattern& pattern) {
 
 	paste_elements(str.c_str(), pattern_gui, pattern);
 }
-
+// Convert current elements into single string.
 string Panel::format_elements() const {
 	string str;
 
@@ -330,31 +333,31 @@ PanelGui::PanelGui(Rectangle panel_bounds) {
 			  buttons_bounds.height = 30.0f;
 
 	float x_offset = 65.0f;
-	copy_btn = new Button{ buttons_bounds, "Copy" };
+	copy_btn = Button{ buttons_bounds, "Copy" };
 	buttons_bounds.x += x_offset;
-	paste_btn = new Button{ buttons_bounds, "Paste" };
+	paste_btn = Button{ buttons_bounds, "Paste" };
 
 	buttons_bounds.x = panel_bounds.x + panel_bounds.width - buttons_bounds.width - x_offset;
-	load_btn = new Button{ buttons_bounds, "Load" };
+	load_btn = Button{ buttons_bounds, "Load" };
 
 	buttons_bounds.x += x_offset;
-	save_btn = new Button{ buttons_bounds, "Save" };
+	save_btn = Button{ buttons_bounds, "Save" };
 }
 
 void PanelGui::draw() {
-	copy_btn->draw();
-	paste_btn->draw();
-	load_btn->draw();
-	save_btn->draw();
+	copy_btn.draw();
+	paste_btn.draw();
+	load_btn.draw();
+	save_btn.draw();
 }
 
 void PanelGui::update(Panel& panel, PatternGui& pattern_gui, Pattern& pattern) {
-	if (copy_btn->clicked()) { panel.copy(); }
-	if (paste_btn->clicked()) {
+	if (copy_btn.clicked()) { panel.copy(); }
+	if (paste_btn.clicked()) {
 		const char* txt = GetClipboardText();
 		panel.paste_elements(txt, pattern_gui, pattern); 
 	};
 
-	if (load_btn->clicked()) { panel.load_elements(pattern_gui, pattern); }
-	if (save_btn->clicked()) { panel.save_elements(); }
+	if (load_btn.clicked()) { panel.load_elements(pattern_gui, pattern); }
+	if (save_btn.clicked()) { panel.save_elements(); }
 }

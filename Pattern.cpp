@@ -1,5 +1,10 @@
+#include<sstream>
+
 #include "Pattern.h"
-#include <sstream>
+
+using std::stringstream;
+using std::hex;
+using std::uppercase;
 
 DisplayStates<4> Pattern::get_states_from_leds() {
 	size_t leds_active_size = static_cast<size_t>(display_amount);
@@ -361,11 +366,11 @@ void Pattern::mirror_h(size_t i, size_t row, size_t col) {
 			if (leds[i][row][col_mirror].get_state() != LedState::ON) {
 				leds[i][row][col_mirror].set_state(led_state);
 			}
-			leds[i][row][col_mirror].set_forced_state(true);
+			leds[i][row][col_mirror].set_state_locked(true);
 		}
 	}
 	else {
-		leds[i][row][col_mirror].set_forced_state(false);
+		leds[i][row][col_mirror].set_state_locked(false);
 	}
 }
 
@@ -394,13 +399,13 @@ void Pattern::mirror_hv(size_t i, size_t row, size_t col) {
 				leds[i][row][col_mirror].set_state(led_state);
 			}
 
-			leds[i][row_mirror][col_mirror].set_forced_state(true);
-			leds[i][row_mirror][col].set_forced_state(true);
-			leds[i][row][col_mirror].set_forced_state(true);
+			leds[i][row_mirror][col_mirror].set_state_locked(true);
+			leds[i][row_mirror][col].set_state_locked(true);
+			leds[i][row][col_mirror].set_state_locked(true);
 		}
 	}
 	else {
-		leds[i][row][col].set_forced_state(false);
+		leds[i][row][col].set_state_locked(false);
 	}
 }
 
@@ -432,14 +437,14 @@ void Pattern::mirror_hv_4x(size_t i, size_t row, size_t col) {
 				leds[i][row][col_mirror].set_state(led_state);
 			}
 
-			leds[i][row_mirror][col_mirror].set_forced_state(true);
-			leds[i_orig][row_mirror][col].set_forced_state(true);
-			leds[i][row_mirror][col_mirror].set_forced_state(true);
-			leds[i][row][col_mirror].set_forced_state(true);
+			leds[i][row_mirror][col_mirror].set_state_locked(true);
+			leds[i_orig][row_mirror][col].set_state_locked(true);
+			leds[i][row_mirror][col_mirror].set_state_locked(true);
+			leds[i][row][col_mirror].set_state_locked(true);
 		}
 	}
 	else {
-		leds[i_orig][row][col].set_forced_state(false);
+		leds[i_orig][row][col].set_state_locked(false);
 	}
 }
 
@@ -458,11 +463,11 @@ void Pattern::mirror_v(size_t i, size_t row, size_t col) {
 			if (leds[i][row_mirror][col].get_state() != LedState::ON) {
 				leds[i][row_mirror][col].set_state(led_state);
 			}
-			leds[i][row_mirror][col].set_forced_state(true);
+			leds[i][row_mirror][col].set_state_locked(true);
 		}
 	}
 	else {
-		leds[i][row_mirror][col].set_forced_state(false);
+		leds[i][row_mirror][col].set_state_locked(false);
 	}
 }
 

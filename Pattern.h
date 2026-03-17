@@ -3,22 +3,30 @@
 #include "gui_elements.h"
 #include "Led.h"
 #include "FramesManager.h"
+
 #include "enums.h"
 #include "using_templates.h"
 
-#include <bitset>
-#include <vector>
-#include <string>
-#include <iostream>
-
-using namespace std;
-
+// Holds LED states for both static and animated modes.
+// N = number of displays (1 or 4)
 template<size_t N>
 struct ActiveLedStates {
 	DisplayStates<N> default_state = {};
-	DisplayStates<N> animation_state = {};
+	DisplayStates<N> animation_state = {}; 
 };
 
+// Represents an 8x8 LED pattern across 1 or 4 displays.
+//
+// Responsibilities:
+// - Store and manage LED states
+// - Handle rendering (LEDs + grid lines)
+// - Switch between static and animation modes
+// - Synchronize with FramesManager for animations
+//
+// UI labels:
+// - idx_h: horizontal indices (rows)
+// - bits_v: vertical bit labels (bitmask values: 8 4 2 1 8 4 2 1)
+//   representing columns encoded as 0x00–0xFF
 class Pattern {
 public:
 	Pattern();
@@ -40,11 +48,15 @@ public:
 
 	void set_state(PatternState state) { pattern_state = state; }
 	void set_type(PatternType type);
+	// Set pattern from external source (e.g., clipboard or file)
 	void set_pattern(const vector<array<bitset<8>, 8>>& elements_valb);
 private:
 	vector<TextEx> bits_v;
 	array<TextEx, 8> idx_h;
 	Display<4> leds;
+	// Separate state storage for 1x and 4x display modes.
+	// Each configuration maintains its own independent data,
+	// preventing state loss when switching between sizes.
 	ActiveLedStates<1> states_1x;
 	ActiveLedStates<4> states_4x;
 
@@ -65,7 +77,6 @@ private:
 	DisplayAmount display_amount = DisplayAmount::x1;
 	DisplayAmount old_amount = DisplayAmount::x4;
 
-	// i++; 0, 3; 4, 7;
 	void push_bits_v(int start_idx, int end_idx);
 
 	void draw_leds();

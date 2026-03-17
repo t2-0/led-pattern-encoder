@@ -2,10 +2,8 @@
 #include "raylib_raygui.h"
 #include "enums.h"
 #include <string>
-#include <vector>
-#include <array>
 
-using namespace std;
+using std::string;
 
 Color adjust_brightness(Color c, float factor);
 
@@ -47,6 +45,7 @@ private:
 
 class Button {
 public:
+	Button() { }
 	Button(Rectangle bounds, string text) : bounds{ bounds }, text{ text } {}
 	void draw() { clicked_b = GuiButton(bounds, text.c_str()); }
 
@@ -58,7 +57,7 @@ public:
 		return false;
 	}
 private:
-	Rectangle bounds;
+	Rectangle bounds = { };
 	string text;
 
 	bool clicked_b = false;
@@ -163,6 +162,7 @@ private:
 
 class ScrollBar {
 public:
+	ScrollBar() { }
 	ScrollBar(Rectangle bounds, float min_scroll, float font_size, size_t item_count);
 
 	void draw();
@@ -176,7 +176,7 @@ public:
 private:
 	Rectangle bounds;
 
-	float min_scroll;
-	float max_scroll;
-	float scroll_val;
+	float min_scroll = 0;
+	float max_scroll = 0;
+	float scroll_val = 0;
 };
