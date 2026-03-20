@@ -1,6 +1,6 @@
 #include<sstream>
 
-#include "Pattern.h"
+#include "pattern/Pattern.h"
 
 using std::stringstream;
 using std::hex;
@@ -264,7 +264,6 @@ vector<vector<string>> Pattern::convert_hex() {
 		else {
 			states = frames_manager_4x.get_frame_states();
 		}
-
 
 		for (size_t l = 0; l < states.size(); l++) {
 			if (display_amount == DisplayAmount::x4) {
@@ -537,7 +536,7 @@ void Pattern::set_amount(DisplayAmount display_amount) {
 
 
 		x1 = leds[3][0][7].get_pos().x;
-		y = leds[1][7][0].get_pos().y;
+		y  = leds[1][7][0].get_pos().y;
 		base_pos = { 35.0f, 60.0f };
 		x_pos = base_pos.x - radius;
 		y_pos = base_pos.y - (base_pos.y - y) / 2;
@@ -594,8 +593,22 @@ void Pattern::leds_update() {
 	for (size_t i = 0; i < leds_active_size; i++) {
 		for (size_t r = 0; r < leds[i].size(); r++) {
 			for (size_t c = 0; c < leds[i][r].size(); c++) {
-				if (display_amount == DisplayAmount::x1) { set_states_1x(); }
-				else { set_states_4x();}
+				if (display_amount == DisplayAmount::x1) {
+					if (pattern_type == PatternType::DEFAULT) {
+						states_1x.default_state[i][r][c] = leds[i][r][c].get_state();
+					}
+					else {
+						states_1x.animation_state[i][r][c] = leds[i][r][c].get_state();
+					}
+				}
+				else {
+					if (pattern_type == PatternType::DEFAULT) {
+						states_4x.default_state[i][r][c] = leds[i][r][c].get_state();
+					}
+					else {
+						states_4x.animation_state[i][r][c] = leds[i][r][c].get_state();
+					}
+				}
 
 				leds[i][r][c].update();
 			}
@@ -628,38 +641,6 @@ void Pattern::set_pattern(const vector<array<bitset<8>, 8>>& elements_valb) {
 					int b_r = elements_valb[i][r].size() - b - 1;
 					if (elements_valb[i][r][b]) { leds[i][r][b_r].set_state(LedState::ON); }
 					else { leds[i][r][b_r].set_state(LedState::OFF); }
-				}
-			}
-		}
-	}
-}
-
-void Pattern::set_states_1x() {
-	size_t leds_active_size = static_cast<size_t>(display_amount);
-	for (size_t i = 0; i < leds_active_size; i++) {
-		for (size_t r = 0; r < leds[i].size(); r++) {
-			for (size_t c = 0; c < leds[i][r].size(); c++) {
-				if (pattern_type == PatternType::DEFAULT) {
-					states_1x.default_state[i][r][c] = leds[i][r][c].get_state();
-				}
-				else {
-					states_1x.animation_state[i][r][c] = leds[i][r][c].get_state();
-				}
-			}
-		}
-	}
-}
-
-void Pattern::set_states_4x() {
-	size_t leds_active_size = static_cast<size_t>(display_amount);
-	for (size_t i = 0; i < leds_active_size; i++) {
-		for (size_t r = 0; r < leds[i].size(); r++) {
-			for (size_t c = 0; c < leds[i][r].size(); c++) {
-				if (pattern_type == PatternType::DEFAULT) {
-					states_4x.default_state[i][r][c] = leds[i][r][c].get_state();
-				}
-				else {
-					states_4x.animation_state[i][r][c] = leds[i][r][c].get_state();
 				}
 			}
 		}

@@ -1,6 +1,6 @@
 #pragma once
 #include "raylib_raygui.h"
-#include "enums.h"
+#include "types/enums.h"
 #include <string>
 
 using std::string;
@@ -174,7 +174,7 @@ public:
 	float get_max_scroll() { return max_scroll; }
 	float get_scroll_val() { return scroll_val; }
 private:
-	Rectangle bounds;
+	Rectangle bounds = {};
 
 	float min_scroll = 0;
 	float max_scroll = 0;

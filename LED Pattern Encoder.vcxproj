@@ -71,7 +71,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>include;$(IncludePath)</IncludePath>
+    <IncludePath>include;src/;$(IncludePath)</IncludePath>
     <LibraryPath>lib\raylib\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -137,25 +137,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Panel.cpp" />
-    <ClCompile Include="FramesManager.cpp" />
-    <ClCompile Include="gui_elements.cpp" />
-    <ClCompile Include="Led.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="Pattern.cpp" />
-    <ClCompile Include="raylib_raygui.cpp" />
-    <ClCompile Include="win32_dialog.cpp" />
+    <ClCompile Include="src\frames\FramesManager.cpp" />
+    <ClCompile Include="src\gui\gui_elements.cpp" />
+    <ClCompile Include="src\led\Led.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\panel\Panel.cpp" />
+    <ClCompile Include="src\pattern\Pattern.cpp" />
+    <ClCompile Include="src\raylib_raygui.cpp" />
+    <ClCompile Include="src\utils\win32_dialog.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Panel.h" />
-    <ClInclude Include="enums.h" />
-    <ClInclude Include="FramesManager.h" />
-    <ClInclude Include="gui_elements.h" />
-    <ClInclude Include="Led.h" />
-    <ClInclude Include="Pattern.h" />
-    <ClInclude Include="raylib_raygui.h" />
-    <ClInclude Include="using_templates.h" />
-    <ClInclude Include="win32_dialog.h" />
+    <ClInclude Include="src\frames\FramesManager.h" />
+    <ClInclude Include="src\gui\gui_elements.h" />
+    <ClInclude Include="src\led\Led.h" />
+    <ClInclude Include="src\panel\Panel.h" />
+    <ClInclude Include="src\pattern\Pattern.h" />
+    <ClInclude Include="src\raylib_raygui.h" />
+    <ClInclude Include="src\types\enums.h" />
+    <ClInclude Include="src\types\using_templates.h" />
+    <ClInclude Include="src\utils\win32_dialog.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

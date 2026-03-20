@@ -37,6 +37,7 @@ void Led::draw() {
 		color = GetColor(GuiGetStyle(BUTTON, BASE_COLOR_PRESSED));
 		break;
 	}
+
 	DrawCircleV(center, radius, color);
 	DrawCircleLinesV(center, radius, line_color);
 }

@@ -15,57 +15,57 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="src\pattern\Pattern.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Pattern.cpp">
+    <ClCompile Include="src\frames\FramesManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="raylib_raygui.cpp">
+    <ClCompile Include="src\gui\gui_elements.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gui_elements.cpp">
+    <ClCompile Include="src\led\Led.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FramesManager.cpp">
+    <ClCompile Include="src\panel\Panel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Led.cpp">
+    <ClCompile Include="src\utils\win32_dialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Panel.cpp">
+    <ClCompile Include="src\raylib_raygui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="win32_dialog.cpp">
+    <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Pattern.h">
+    <ClInclude Include="src\pattern\Pattern.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="raylib_raygui.h">
+    <ClInclude Include="src\frames\FramesManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="gui_elements.h">
+    <ClInclude Include="src\gui\gui_elements.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FramesManager.h">
+    <ClInclude Include="src\led\Led.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Led.h">
+    <ClInclude Include="src\panel\Panel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="enums.h">
+    <ClInclude Include="src\types\using_templates.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Panel.h">
+    <ClInclude Include="src\types\enums.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="win32_dialog.h">
+    <ClInclude Include="src\utils\win32_dialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="using_templates.h">
+    <ClInclude Include="src\raylib_raygui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

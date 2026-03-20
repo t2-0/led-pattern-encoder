@@ -1,11 +1,11 @@
 #pragma once
 #include "raylib_raygui.h"
-#include "gui_elements.h"
-#include "Led.h"
-#include "FramesManager.h"
+#include "gui/gui_elements.h"
+#include "led/Led.h"
+#include "frames/FramesManager.h"
 
-#include "enums.h"
-#include "using_templates.h"
+#include "types/enums.h"
+#include "types/using_templates.h"
 
 // Holds LED states for both static and animated modes.
 // N = number of displays (1 or 4)
@@ -94,9 +94,6 @@ private:
 
 	void set_leds_states(DisplayStates<4> states);
 	DisplayStates<4> get_states_from_leds();
-
-	void set_states_1x();
-	void set_states_4x();
 
 	void set_leds_1x();
 	void set_leds_4x();

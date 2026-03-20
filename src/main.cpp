@@ -1,5 +1,5 @@
-#include "Pattern.h"
-#include "Panel.h"
+#include "pattern/Pattern.h"
+#include "panel/Panel.h"
 
 int main() {
 	InitWindow(800, 600, "LED Pattern Encoder");

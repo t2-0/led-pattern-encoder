@@ -1,9 +1,9 @@
 #pragma once
 #include "raylib_raygui.h"
-#include "gui_elements.h"
-#include "Led.h"
-#include "enums.h"
-#include "using_templates.h"
+#include "gui/gui_elements.h"
+#include "led/Led.h"
+#include "types/enums.h"
+#include "types/using_templates.h"
 
 #include <bitset>
 #include <vector>
@@ -23,6 +23,7 @@ using std::to_string;
 // Concept:
 // - frame_states: persistent animation data
 // - frame_idx: currently selected frame (-1 = none)
+// - max amount of frames = 64
 class FramesManager {
 public:
 	void play_loop();

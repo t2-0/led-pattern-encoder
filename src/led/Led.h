@@ -1,6 +1,6 @@
 #pragma once
 #include "raylib_raygui.h"
-#include "enums.h"
+#include "types/enums.h"
 
 // Represents a single LED in the display.
 //

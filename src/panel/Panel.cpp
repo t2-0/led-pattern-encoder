@@ -1,5 +1,5 @@
 #include "Panel.h"
-#include "win32_dialog.h"
+#include "utils/win32_dialog.h"
 
 #include <charconv>
 #include <sstream>

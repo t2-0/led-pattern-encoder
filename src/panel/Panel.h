@@ -1,7 +1,7 @@
 #pragma once
 #include "raylib_raygui.h"
-#include "gui_elements.h"
-#include "Pattern.h"
+#include "gui/gui_elements.h"
+#include "pattern/Pattern.h"
 
 // Displays and manages a textual (hexadecimal) representation of the LED pattern.
 //
