@@ -3,7 +3,6 @@
 
 int main() {
 	InitWindow(800, 600, "LED Pattern Encoder");
-
 	string file = "style/genesis/style_genesis.rgs";
 	GuiLoadStyle(file.c_str());
 
