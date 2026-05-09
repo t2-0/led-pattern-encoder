@@ -1,4 +1,5 @@
 #include "web.h"
+#include "raylib_raygui.h"
 
 #ifdef __EMSCRIPTEN__
 	#include <emscripten/emscripten.h>
@@ -18,6 +19,7 @@
 				stringToUTF8(text, ptr, len);
 
 				Module.ccall('file_loaded', null,['number'],[ptr]);
+				Module._free(ptr);
 			})
 		};
 
@@ -53,6 +55,10 @@
 			stringToUTF8(text, ptr, len);
 
 			Module.ccall('clipboard_pasted', null, ['number'], [ptr]);
+			Module._free(ptr);
+		}).catch(function(err) {
+			const msg = "Clipboard access denied";
+			Module.ccall('js_trace_log', null, ['string'], [msg]);
 		});
 	});
 
@@ -66,6 +72,11 @@
 
 	void request_clipboard() {
 		request_clipboard_impl();
+	}
+
+	extern "C"
+		void js_trace_log(const char* msg) {
+			TraceLog(LOG_INFO, "%s", msg);
 	}
 
 #endif 

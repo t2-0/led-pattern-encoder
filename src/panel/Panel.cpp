@@ -13,10 +13,9 @@
 	extern "C"
 		void file_loaded(char* text) {
 			if (!text) { return; }
+
 			web_str = text;
 			file_loaded_b = true;
-
-			free(text);
 		}
 
 	string clipboard_str;
@@ -28,8 +27,6 @@
 
 		clipboard_str   = text;
 		clipboard_ready = true;
-
-		free(text);
 	}
 
 #endif
