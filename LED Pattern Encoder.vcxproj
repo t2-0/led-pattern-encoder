@@ -71,12 +71,14 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>include;src/;$(IncludePath)</IncludePath>
+    <IncludePath>include;src/;style;$(IncludePath)</IncludePath>
     <LibraryPath>lib\raylib\Debug;$(LibraryPath)</LibraryPath>
+    <OutDir>$(ProjectDir)build\Desktop\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>include;src/;$(IncludePath)</IncludePath>
+    <IncludePath>include;src/;style;$(IncludePath)</IncludePath>
     <LibraryPath>lib\raylib\Release;$(LibraryPath)</LibraryPath>
+    <OutDir>$(ProjectDir)build\Desktop\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -146,6 +148,7 @@
     <ClCompile Include="src\panel\Panel.cpp" />
     <ClCompile Include="src\pattern\Pattern.cpp" />
     <ClCompile Include="src\raylib_raygui.cpp" />
+    <ClCompile Include="src\utils\web.cpp" />
     <ClCompile Include="src\utils\win32_dialog.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -157,6 +160,7 @@
     <ClInclude Include="src\raylib_raygui.h" />
     <ClInclude Include="src\types\enums.h" />
     <ClInclude Include="src\types\using_templates.h" />
+    <ClInclude Include="src\utils\web.h" />
     <ClInclude Include="src\utils\win32_dialog.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

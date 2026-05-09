@@ -47,10 +47,10 @@ void TimedText::draw() {
 	}
 }
 
-ScrollBar::ScrollBar(Rectangle bounds, float min_scroll, float font_size, size_t item_count) {
+ScrollBar::ScrollBar(Rectangle bounds, float min_scroll, float max_scroll, float font_size) {
 	this->bounds = bounds;
 	this->min_scroll = min_scroll;
-	this->max_scroll = 10 + item_count * (font_size + 10);
+	this->max_scroll = max_scroll;
 
 	scroll_val = 0;
 }

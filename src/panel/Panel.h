@@ -46,7 +46,6 @@ private:
 	float color_factor = 1.0f;
 
 	Font font = GuiGetFont();
-	bool invalid_paste = false;
 
 	string format_elements() const;
 };

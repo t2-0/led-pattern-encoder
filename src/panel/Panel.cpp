@@ -1,8 +1,38 @@
 #include "Panel.h"
-#include "utils/win32_dialog.h"
-
 #include <charconv>
 #include <sstream>
+
+#ifdef _WIN32
+	#include "utils/win32_dialog.h"
+#elif __EMSCRIPTEN__
+	#include "utils/web.h"
+
+	string web_str;
+	bool file_loaded_b = false;
+
+	extern "C"
+		void file_loaded(char* text) {
+			if (!text) { return; }
+			web_str = text;
+			file_loaded_b = true;
+
+			free(text);
+		}
+
+	string clipboard_str;
+	bool clipboard_ready = false;
+
+	extern "C"
+		void clipboard_pasted(char* text) {
+		if (!text) { return; }
+
+		clipboard_str   = text;
+		clipboard_ready = true;
+
+		free(text);
+	}
+
+#endif
 
 using std::stringstream;
 using std::string_view;
@@ -24,7 +54,7 @@ Panel::Panel(Rectangle bounds, float color_factor) {
 	scrollbar_bounds.width = 10;
 
 	float font_size = GuiGetFont().baseSize;
-	scrollbar = ScrollBar{ scrollbar_bounds, 0, font_size, elements.size() };
+	scrollbar = ScrollBar{ scrollbar_bounds, 0, 10 + elements.size() * (font_size + 10), font_size, };
 
 	Vector2 container_pos = { bounds.x, bounds.y - 20.0f };
 	container_s.set_pos(container_pos);
@@ -66,7 +96,6 @@ void Panel::set_elements_text(const vector<vector<string>>& elements_s, PatternT
 			  idx_bounds.width -= 2.0f;
 			  idx_bounds.height = 19.0f;
 
-	bool animation_4x = false;
 	if (pattern_type == PatternType::DEFAULT) {
 		if (display_amount == DisplayAmount::x1) {
 			container_s.set_text("array<int, 8> ... =");
@@ -81,7 +110,6 @@ void Panel::set_elements_text(const vector<vector<string>>& elements_s, PatternT
 		}
 		else {
 			container_s.set_text("vector<vector<array<int, 8>>> ... =");
-			animation_4x = true;
 		}
 	}
 
@@ -133,9 +161,9 @@ void Panel::copy() {
 void Panel::paste_elements(const char* txt, PatternGui& pattern_gui, Pattern& pattern) {
 	if (txt == nullptr) { invalid_in.trigger(); return; }
 
-	stringstream ss { txt };
+	stringstream ss{ txt };
 	string str;
-	
+
 	vector<vector<string>> elements_s;
 	vector<array<bitset<8>, 8>> elements_valb;
 	PatternType pattern_type = PatternType::DEFAULT;
@@ -150,7 +178,7 @@ void Panel::paste_elements(const char* txt, PatternGui& pattern_gui, Pattern& pa
 		str += ' ';
 		str += str_t;
 
-		if (str == "= {") {	elements_s.push_back({ str }); }
+		if (str == "= {") { elements_s.push_back({ str }); }
 		else { invalid_in.trigger(); return; }
 	}
 	else { invalid_in.trigger(); return; }
@@ -169,8 +197,8 @@ void Panel::paste_elements(const char* txt, PatternGui& pattern_gui, Pattern& pa
 		animation_4x = true;
 
 		string to_push = "\t\t\t\t";
-			   to_push += str;
-			   to_push += ' ';
+		to_push += str;
+		to_push += ' ';
 		elements_s.push_back({ to_push });
 	}
 
@@ -208,7 +236,7 @@ void Panel::paste_elements(const char* txt, PatternGui& pattern_gui, Pattern& pa
 				if (counter_4x != 4) { invalid_in.trigger(); return; }
 				counter_4x = 0;
 				string to_push = "\t\t\t";
-					   to_push += str;
+				to_push += str;
 				elements_s.push_back({ to_push });
 				ss >> str;
 			}
@@ -221,25 +249,25 @@ void Panel::paste_elements(const char* txt, PatternGui& pattern_gui, Pattern& pa
 				if (animation_4x && counter_4x != 4) { invalid_in.trigger(); return; }
 				counter_4x = 0;
 				string to_push = "\t\t\t";
-					   to_push += str;
+				to_push += str;
 				elements_s.push_back({ to_push });
 
 				ss >> str;
 				string to_push2 = "\t\t\t";
-				       to_push2 += str;
-				       to_push2 += ' ';
+				to_push2 += str;
+				to_push2 += ' ';
 
 				elements_s.push_back({ to_push2 });
 				elements_valb.push_back({});
 
 				if (animation_4x) {
 					ss >> str;
-					if (str != "{") { invalid_in.trigger(); return;	}
+					if (str != "{") { invalid_in.trigger(); return; }
 
 					counter_4x++;
 					string to_push3 = "\t\t\t\t";
-						   to_push3 += str;
-						   to_push3 += ' ';
+					to_push3 += str;
+					to_push3 += ' ';
 					elements_s.push_back({ to_push3 });
 				}
 			}
@@ -249,7 +277,7 @@ void Panel::paste_elements(const char* txt, PatternGui& pattern_gui, Pattern& pa
 			s += str;
 			ss >> str;
 
-			if (str != "{") { invalid_in.trigger(); return;	}
+			if (str != "{") { invalid_in.trigger(); return; }
 
 			counter_4x++;
 			string to_push = "\t\t\t";
@@ -279,29 +307,10 @@ void Panel::paste_elements(const char* txt, PatternGui& pattern_gui, Pattern& pa
 	pattern.set_type(pattern_type);
 	pattern.set_amount(display_amount);
 	pattern.set_pattern(elements_valb);
-	
+
 	set_elements_text(elements_s, pattern_type, display_amount);
 }
 
-void Panel::save_elements() {
-	HWND hwnd = (HWND)GetWindowHandle();
-	string str;
-
-	for (size_t i = 0; i < elements.size(); i++) {
-		for (size_t r = 0; r < elements[i].size(); r++) {
-			str += elements[i][r].get_text();
-		}
-		str += '\n';
-	}
-	save_file(hwnd, str);
-}
-
-void Panel::load_elements(PatternGui& pattern_gui, Pattern& pattern) {
-	HWND hwnd = (HWND)GetWindowHandle();
-	string str = load_file(hwnd);
-
-	paste_elements(str.c_str(), pattern_gui, pattern);
-}
 // Convert current elements into single string.
 string Panel::format_elements() const {
 	string str;
@@ -351,13 +360,67 @@ void PanelGui::draw() {
 	save_btn.draw();
 }
 
-void PanelGui::update(Panel& panel, PatternGui& pattern_gui, Pattern& pattern) {
-	if (copy_btn.clicked()) { panel.copy(); }
-	if (paste_btn.clicked()) {
-		const char* txt = GetClipboardText();
-		panel.paste_elements(txt, pattern_gui, pattern); 
-	};
+#ifdef _WIN32
+	void Panel::save_elements() {
+		HWND hwnd = (HWND)GetWindowHandle();
 
-	if (load_btn.clicked()) { panel.load_elements(pattern_gui, pattern); }
-	if (save_btn.clicked()) { panel.save_elements(); }
-}
+		string str;
+		for (size_t i = 0; i < elements.size(); i++) {
+			for (size_t r = 0; r < elements[i].size(); r++) {
+				str += elements[i][r].get_text();
+			}
+			str += '\n';
+		}
+
+		save_file(hwnd, str);
+	}
+
+	void Panel::load_elements(PatternGui& pattern_gui, Pattern& pattern) {
+		HWND hwnd = (HWND)GetWindowHandle();
+		string str = load_file(hwnd);
+		paste_elements(str.c_str(), pattern_gui, pattern);
+	}
+
+	void PanelGui::update(Panel& panel, PatternGui& pattern_gui, Pattern& pattern) {
+		if (copy_btn.clicked()) { panel.copy(); }
+
+		if (paste_btn.clicked()) {
+			const char* txt = GetClipboardText();
+			panel.paste_elements(txt, pattern_gui, pattern);
+		};
+
+		if (load_btn.clicked()) { panel.load_elements(pattern_gui, pattern); }
+		if (save_btn.clicked()) { panel.save_elements(); }
+	}
+#elif __EMSCRIPTEN__
+	void Panel::save_elements() {
+		string str;
+		for (size_t i = 0; i < elements.size(); i++) {
+			for (size_t r = 0; r < elements[i].size(); r++) {
+				str += elements[i][r].get_text();
+			}
+			str += '\n';
+		}
+
+		save_file(str.c_str());
+	}
+
+	void Panel::load_elements(PatternGui& pattern_gui, Pattern& pattern) {
+		paste_elements(web_str.c_str(), pattern_gui, pattern);
+		file_loaded_b = false;
+	}
+
+	void PanelGui::update(Panel& panel, PatternGui& pattern_gui, Pattern& pattern) {
+		if (copy_btn.clicked()) {
+			panel.copy();
+		}
+
+		if (paste_btn.clicked()) { request_clipboard(); };
+		if (clipboard_ready) { clipboard_ready = false; panel.paste_elements(clipboard_str.c_str(), pattern_gui, pattern); }
+
+		if (load_btn.clicked()) { load_file(); }
+		if (file_loaded_b) { panel.load_elements(pattern_gui, pattern); }
+
+		if (save_btn.clicked()) { panel.save_elements(); }
+	}
+#endif 

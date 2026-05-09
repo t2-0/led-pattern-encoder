@@ -163,7 +163,7 @@ private:
 class ScrollBar {
 public:
 	ScrollBar() { }
-	ScrollBar(Rectangle bounds, float min_scroll, float font_size, size_t item_count);
+	ScrollBar(Rectangle bounds, float min_scroll, float max_scroll, float font_size);
 
 	void draw();
 

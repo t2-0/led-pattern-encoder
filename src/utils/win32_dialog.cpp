@@ -7,7 +7,9 @@
 #include <sstream>
 #include <fstream>
 
-using namespace std;
+using std::ifstream;
+using std::ofstream;
+using std::getline;
 
 string load_file(HWND owner) {
     HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
