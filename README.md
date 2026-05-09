@@ -35,11 +35,15 @@ RUN
 
 Extract the archive and run LEDPatternEncoder.exe from the /dist folder.
 
+https://t2-0.github.io/led-pattern-encoder/
+
 ------------------------------------------------------------
 
 PLATFORM
 
-Windows-only (uses windows.h).
+- Windows
+
+- Web (Emscripten / raylib Web build)
 
 ------------------------------------------------------------
 
