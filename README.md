@@ -1,9 +1,9 @@
 LED Pattern Encoder
 
-A C++ application for editing and animating 8x8 LED patterns,
-with support for multiple displays (1x / 4x).
+A C++ application for editing and animating 8x8 LED patterns, with support for multiple displays (1x / 4x).
 
 Built using raylib + raygui.
+Supports native desktop and WebAssembly builds via Emscripten.
 
 ------------------------------------------------------------
 
@@ -28,6 +28,8 @@ USAGE
 BUILD
 
 Open the project in Visual Studio and build.
+
+The project uses raylib.lib included in /lib and Windows SDK libraries (winmm.lib, gdi32.lib, opengl32.lib).
 
 ------------------------------------------------------------
 
@@ -65,8 +67,10 @@ The repository includes .txt files in example/ demonstrating valid pattern forma
 
 THIRD-PARTY LIBRARIES
 
-This project uses raylib and raygui (zlib/libpng license).
-Their licenses are included in the third_party/ directory.
+- raylib and raygui (zlib license)
+- Emscripten (WebAssembly toolchain)
+
+All license texts are included in the third_party/ directory.
 
 ------------------------------------------------------------
 
